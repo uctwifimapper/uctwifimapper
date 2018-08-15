@@ -1,7 +1,10 @@
+import org.postgresql.geometric.PGpoint;
+import org.postgresql.util.PGobject;
+
 public class AccessPoint {
     private String bssid;
     private String ssid;
-    private Location location;
+    private PGpoint location;
     private int linkSpeed;
 
     public String getBssid() {
@@ -20,11 +23,11 @@ public class AccessPoint {
         this.ssid = ssid;
     }
 
-    public Location getLocation() {
+    public PGpoint getLocation() {
         return location;
     }
 
-    public void setLocation(Location location) {
+    public void setLocation(PGpoint location) {
         this.location = location;
     }
 
