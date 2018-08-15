@@ -1,0 +1,11 @@
+GET location/lat;lon
+POST location {
+lat, 
+lon, 
+rssi - https://www.metageek.com/training/resources/understanding-rssi.html, 
+ssid - https://techterms.com/definition/ssid, 
+bssid,
+noise,
+frequency, 
+link_speed
+}

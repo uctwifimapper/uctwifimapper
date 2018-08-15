@@ -1,0 +1,88 @@
+GET http://localhost:8800/location?-33.968836;18.4660163=
+Accept: */*
+Cache-Control: no-cache
+
+###
+
+GET http://localhost:8800/location?-33.968836;18.4660163=
+Accept: */*
+Cache-Control: no-cache
+
+###
+
+GET http://localhost:8800/location?-33.968836;18.4660163=
+Accept: */*
+Cache-Control: no-cache
+
+###
+
+GET http://localhost:8800/location?-33.968836;18.4660163=
+Accept: */*
+Cache-Control: no-cache
+
+###
+
+GET http://localhost:8800/location/uuu
+Accept: */*
+Cache-Control: no-cache
+
+###
+
+GET http://localhost:8800/location
+Accept: */*
+Cache-Control: no-cache
+
+###
+
+GET http://localhost:8800/location
+Accept: */*
+Cache-Control: no-cache
+
+###
+
+GET http://localhost:8800/location
+Accept: */*
+Cache-Control: no-cache
+
+###
+
+GET http://localhost:8800/location
+Accept: */*
+Cache-Control: no-cache
+
+###
+
+GET http://localhost:8800
+Accept: */*
+Cache-Control: no-cache
+
+<> 2018-08-14T095529.200.txt
+
+###
+
+GET http://localhost:8800
+Accept: */*
+Cache-Control: no-cache
+
+<> 2018-08-14T095232.200.txt
+
+###
+
+GET http://localhost:8800
+Accept: */*
+Cache-Control: no-cache
+
+###
+
+GET http://localhost:8800
+Accept: */*
+Cache-Control: no-cache
+
+###
+
+GET http://localhost:8800
+Accept: */*
+Cache-Control: no-cache
+
+###
+
