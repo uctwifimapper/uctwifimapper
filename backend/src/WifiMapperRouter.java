@@ -1,15 +1,12 @@
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
-import org.postgresql.geometric.PGpoint;
-import org.postgresql.util.PGobject;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class WifiMapperRouter {
 
@@ -31,172 +28,63 @@ public class WifiMapperRouter {
     * */
     public static void apnRequest(HttpExchange exchange) {
 
-        String response;
-        int responseCode;
-        OutputStream responseBody;
+        AccessPointDao accessPointDao;
 
-        try (Connection connection = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/wifimapper", "postgres", "tawanda")){
+        switch (exchange.getRequestMethod()) {
 
-            switch (exchange.getRequestMethod()){
+            case "GET":
 
-                case "GET":
+                //TODO: Create method to handle payload request
+                String payload = exchange.getRequestURI().getQuery();
+                String[] point = payload.split(";", 3);
+                Double lat = Double.parseDouble(point[0]);
+                Double lon = Double.parseDouble(point[1]);
+                int radius;
+                if (point.length == 3 && null != point[3]) {
+                    radius = Integer.parseInt(point[3]);
+                }
 
-                    String payload = exchange.getRequestURI().getQuery();
-                    String[] point = payload.split(";", 3);
-                    Double lat = Double.parseDouble(point[0]);
-                    Double lon = Double.parseDouble(point[1]);
-                    int radius;
-                    if(point.length == 3 && null != point[3]){
-                        radius = Integer.parseInt(point[3]);
-                    }
+                accessPointDao = new AccessPointDao();
 
-                    String query = "SELECT * FROM access_point"; //WHERE ST_ClosestPoint("+new PGpoint(lat, lon)+")";
-                    List<AccessPoint> apnList = new ArrayList<>();
+                sendResponse(exchange, "application/json", 200, new Gson().toJson(accessPointDao.get("", payload)));
 
-                    try(Statement statement = connection.createStatement()) {
+                break;
 
-                        try(ResultSet resultSet = statement.executeQuery(query)) {
+            case "POST":
 
-                            while (resultSet.next()) {
+                StringBuilder body = new StringBuilder();
+                InputStreamReader reader;
 
-                                AccessPoint apn = new AccessPoint();
-
-                                apn.setBssid(resultSet.getString("bssid"));
-                                apn.setLinkSpeed(resultSet.getInt("link_speed"));
-                                apn.setSsid(resultSet.getString("ssid"));
-
-                                if (resultSet.getString("location") != null) {
-                                    apn.setLocation(new PGpoint(resultSet.getString("location")));
-                                }
-
-                                apnList.add(apn);
-                            }
-                        }
-                    }
-
-                    sendResponse(exchange, "application/json", 200, new Gson().toJson(apnList));
-
-                    break;
-
-                case "POST":
-
-                    StringBuilder body = new StringBuilder();
-                    try (InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8.name())) {
-                        char[] buffer = new char[256];
-                        int read;
+                try {
+                    reader = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8.name());
+                    char[] buffer = new char[256];
+                    int read;
+                    try {
                         while ((read = reader.read(buffer)) != -1) {
                             body.append(buffer, 0, read);
                         }
+                        reader.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
 
-                    AccessPoint accessPoint = new Gson().fromJson(body.toString(), AccessPoint.class);
+                accessPointDao = new AccessPointDao();
 
-                    PGobject pGobject = new PGobject();
-                    pGobject.setValue(accessPoint.getBssid());
-                    pGobject.setType("macaddr");
-
-                    PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO access_point VALUES (?,?,?,?)");
-                    preparedStatement.setObject(1, pGobject);
-                    preparedStatement.setString(2, accessPoint.getSsid());
-                    preparedStatement.setObject(3, accessPoint.getLocation());
-                    preparedStatement.setInt(4, accessPoint.getLinkSpeed());
-
-                    preparedStatement.executeUpdate();
-                    preparedStatement.close();
-
+                if (accessPointDao.save(new Gson().fromJson(body.toString(), AccessPoint.class))) {
                     sendResponse(exchange, "application/json", 200, new Gson().toJson("OK"));
+                } else {
+                    sendResponse(exchange, "application/json", 400, new Gson().toJson("error"));
 
-                    break;
+                }
 
-                default: break;
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-            sendResponse(exchange, "application/json", 400, new Gson().toJson("error"));
+                break;
+
+            default:
+                break;
         }
-    }
-
-    /*
-    *   GET: /bssid?"ee:00:8c:b8:b7:01" OR /
-    * */
-    public static void bssidRequest(HttpExchange exchange) {
-
-        try (Connection connection = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/wifimapper", "postgres", "tawanda")){
-
-            switch (exchange.getRequestMethod()){
-
-                case "GET":
-
-                    String bssid = exchange.getRequestURI().getQuery();
-                    PGobject pGobject = new PGobject();
-                    pGobject.setValue(bssid);
-                    pGobject.setType("macaddr");
-
-                    String query = "SELECT * FROM access_point WHERE bssid='"+bssid+"'";
-
-                    Statement statement = connection.createStatement();
-                    ResultSet resultSet = statement.executeQuery(query);
-
-                    AccessPoint apn = new AccessPoint();
-
-                    while (resultSet.next()) {
-
-                        apn.setBssid( resultSet.getString("bssid"));
-                        apn.setLinkSpeed(resultSet.getInt("link_speed"));
-                        apn.setSsid(resultSet.getString("ssid"));
-
-                        if(resultSet.getString("location") != null){
-                            PGpoint pGpoint = new PGpoint();
-                            apn.setLocation(pGpoint);
-                        }
-                    }
-
-                    resultSet.close();
-                    statement.close();
-
-                    sendResponse(exchange, "application/json", 200, new Gson().toJson(apn));
-
-                    break;
-
-                default: break;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            sendResponse(exchange, "application/json", 400, new Gson().toJson("error"));
-        }
-    }
-
-    /*
-    * *   GET: /apn?name="name" OR /apn?bssid="bssid" OR location="lat;lon;radius" OR spped="linkSpeed"
-    *    POST: /apn Json payload
-    * */
-    public static void genericRequest(HttpExchange exchange){
-
-        try (Connection connection = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/wifimapper", "postgres", "tawanda")) {
-
-            switch (exchange.getRequestMethod()) {
-
-                case "GET":
-
-                    String payload = exchange.getRequestURI().getQuery();
-                    String[] point = payload.split("=", 3);
-
-                    if(null != point){
-
-                        
-                    }
-
-
-                    break;
-                case "POST":
-                    break;
-                    default: break;
-
-            }
-        }catch (Exception e){
-
-        }
-
     }
 
     private static void sendResponse(HttpExchange exchange, String contentType, int responseCode, String responseBody){

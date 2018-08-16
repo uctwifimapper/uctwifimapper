@@ -1,24 +1,47 @@
 import java.sql.*;
 
+/*
+*  Using singleton pattern.
+*  Only one instance of connection to database exists
+* */
 public class Database {
 
-    private Connection connection;
+    private static Connection connection;
 
-    public void insert(){
+    //prevent class instantiation
+    private Database(){}
 
+    public static Connection getConnection(){
+
+        if(null != connection){
+            return connection;
+        }
+
+        return getConnection();
     }
 
-    public void delete(){
+    private static Connection getConnection(String db, String user, String password) {
 
+        try {
+
+            Class.forName("org.postgresql.Driver");
+
+            connection = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/wifimapper", "postgres", "tawanda");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return connection;
     }
 
-    public void update(){
-
-    }
-
-    public void select(String column, String table, String where){
-
-        String sql = "SELECT ? FROM ? WHERE ";
-
+    public static void close(){
+        if (null != connection) {
+            try {
+                connection.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
