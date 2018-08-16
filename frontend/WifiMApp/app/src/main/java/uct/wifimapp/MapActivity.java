@@ -3,6 +3,7 @@ package uct.wifimapp;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
@@ -13,6 +14,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -21,7 +23,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
 
     private GoogleMap mMap;
     private FusedLocationProviderClient mFusedLocationClient;
-    private LatLng userLatLng;
+    private Location mCurrentLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +49,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        userLatLng = null;
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -55,11 +56,13 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         } else {
             // Show rationale and request permission.
         }
+        updateUserLocation();
     }
 
-    /*
+    // Get the most recent user location and centre the camera on it.
     private void updateUserLocation(){
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+        //if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             mFusedLocationClient.getLastLocation()
                     .addOnSuccessListener(this, new OnSuccessListener<Location>() {
@@ -68,7 +71,10 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                             // Got last known location. In some rare situations this can be null.
                             if (location != null) {
                                 // Logic to handle location object.
-                                userLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+                                mCurrentLocation = location; // NOTE: This does not seem to persist outside of this method (mCurrentLocation returns null elsewhere)
+                                LatLng currentLatLng = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+                                //mMap.addMarker(new MarkerOptions().position(currentLatLng).title("Your location"));
+                                mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLatLng));
                             }
                         }
                     });
@@ -76,13 +82,25 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             // Show rationale and request permission.
         }
     }
-    */
 
-    /*
-    private void centreMapOnUser(){
-        mMap.clear();
-        mMap.addMarker(new MarkerOptions().position(userLatLng).title("Your location"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(userLatLng));
+    private void addWifiReading(double latitude, double longitude, int strength){
+        if (strength < 0 || strength > 4){ // Use enum or something for strength in next version
+            return;
+        }
+
+        float markerColour;
+        switch (strength){
+            case 0 : markerColour = BitmapDescriptorFactory.HUE_RED; break;
+            case 1 : markerColour = BitmapDescriptorFactory.HUE_ORANGE; break;
+            case 2 : markerColour = BitmapDescriptorFactory.HUE_YELLOW; break;
+            case 3 : markerColour = BitmapDescriptorFactory.HUE_GREEN; break;
+            case 4 : markerColour = BitmapDescriptorFactory.HUE_CYAN; break;
+            default : markerColour = BitmapDescriptorFactory.HUE_ROSE; break;
+        }
+
+        mMap.addMarker(new MarkerOptions()
+                .position(new LatLng( latitude,longitude))
+                .icon(BitmapDescriptorFactory.defaultMarker(markerColour)));
     }
-    */
+
 }
