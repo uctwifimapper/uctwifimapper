@@ -6,13 +6,6 @@ public class WifiMapperServer {
 
     public static void main(String [] args){
 
-        try {
-            Class.forName("org.postgresql.Driver");
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            return;
-        }
-
         try{
 
             HttpServer server = HttpServer.create(new InetSocketAddress(8800), 0);
@@ -22,9 +15,6 @@ public class WifiMapperServer {
 
             HttpContext context2 = server.createContext("/apn");
             context2.setHandler(WifiMapperRouter::apnRequest);
-
-            HttpContext context3 = server.createContext("/bssid");
-            context3.setHandler(WifiMapperRouter::bssidRequest);
 
             server.start();
 
