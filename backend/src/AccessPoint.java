@@ -1,5 +1,4 @@
 import org.postgresql.geometric.PGpoint;
-import org.postgresql.util.PGobject;
 
 public class AccessPoint {
     private String bssid;
