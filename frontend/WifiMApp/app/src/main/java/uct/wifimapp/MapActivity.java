@@ -1,8 +1,11 @@
 package uct.wifimapp;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -35,7 +38,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         mapFragment.getMapAsync(this);
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
     }
-
 
     /**
      * Manipulates the map once available.
@@ -83,6 +85,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         }
     }
 
+    // Add a map marker displaying a wifi signal strength reading. (To be replaced by colour coded zones in final app)
     private void addWifiReading(double latitude, double longitude, int strength){
         if (strength < 0 || strength > 4){ // Use enum or something for strength in next version
             return;
@@ -101,6 +104,20 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         mMap.addMarker(new MarkerOptions()
                 .position(new LatLng( latitude,longitude))
                 .icon(BitmapDescriptorFactory.defaultMarker(markerColour)));
+    }
+
+    // Return current wifi signal strength level (0-5).
+    private int currentWifiSignalLevel(){
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_WIFI_STATE)
+                == PackageManager.PERMISSION_GRANTED) {
+            WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+            int numberOfLevels = 5;
+            int level = WifiManager.calculateSignalLevel(wifiInfo.getRssi(), numberOfLevels);
+            return level;
+        } else {
+            return -1;
+        }
     }
 
 }
