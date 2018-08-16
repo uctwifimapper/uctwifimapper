@@ -11,6 +11,8 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class WifiMapperServer {
 
@@ -44,7 +46,6 @@ public class WifiMapperServer {
 
     public static void rootRequest(HttpExchange exchange){
         try{
-
             String response = "Welcome to WifiMapper.";
             exchange.sendResponseHeaders(200, response.getBytes().length);
             OutputStream out = exchange.getResponseBody();
@@ -56,6 +57,7 @@ public class WifiMapperServer {
     }
 
     public static void apnRequest(HttpExchange exchange) {
+        
         try (Connection connection = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/wifimapper", "postgres", "tawanda")){
 
             String response;
@@ -70,34 +72,56 @@ public class WifiMapperServer {
                     Double lat = Double.parseDouble(point[0]);
                     Double lon = Double.parseDouble(point[1]);
 
-                    String query = "SELECT * FROM access_point";//WHERE ST_ClosestPoint("+new PGpoint(lat, lon)+")";
+                    String query = "SELECT * FROM access_point"; //WHERE ST_ClosestPoint("+new PGpoint(lat, lon)+")";
                     //ST_DWithin(coords, ST_GeomFromText('POINT(-12.5842 24.4944)',4326), 1)
-
-
                     //String query = "SELECT * FROM access_point WHERE ST_DWithin(location,'POINT("+lat+" "+lon+")' ,4326), 20)";
+                    //String query = "SELECT * FROM access_point ORDER BY location <-> ST_SetSRID(ST_MakePoint("+lat+","+lon+"),4326) LIMIT 1";
+
+                    /*
+                    SELECT ST_Distance(geom,
+                        'POINT(178.1375 51.6186)'::geometry) as distance,
+                    ST_AsText(geom),
+                            name, id
+                    FROM mylocations
+                    ORDER BY geom <-> 'POINT(178.1375 51.6186)'::geometry limit 10
+
+                    SELECT id, name
+                    FROM mylocations
+                    WHERE ST_DWithin(geom::geography,
+                                     ST_GeogFromText('POINT(-73.856077 40.848447)'),
+                                     1609, false);
+                    */
+
+                    //String query = "SELECT * FROM access_point ORDER BY location <-> POINT("+lat+","+lon+")::point LIMIT 10";
+
+                    //String query = "SELECT * FROM access_point WHERE ST_DWithin(location::point, POINT(-33.9650405,18.4639993) ), 1609)";
 
                     Statement statement = connection.createStatement();
                     ResultSet resultSet = statement.executeQuery(query);
 
-                    AccessPoint apn = new AccessPoint();
+                    List<AccessPoint> apnList = new ArrayList<>();
 
                     while (resultSet.next()) {
+
+                        AccessPoint apn = new AccessPoint();
 
                         apn.setBssid( resultSet.getString("bssid"));
                         apn.setLinkSpeed(resultSet.getInt("link_speed"));
                         apn.setSsid(resultSet.getString("ssid"));
 
                         if(resultSet.getString("location") != null){
-                            PGpoint pGpoint = new PGpoint();
-                            apn.setLocation(pGpoint);
+                            apn.setLocation(new PGpoint(resultSet.getString("location")));
                         }
+
+                        apnList.add(apn);
+
                     }
 
                     resultSet.close();
                     statement.close();
                     connection.close();
 
-                    response = new Gson().toJson(apn);
+                    response = new Gson().toJson(apnList);
 
                     exchange.getResponseHeaders().set("Content-Type", "application/json");
                     exchange.sendResponseHeaders(200, response.getBytes().length);
