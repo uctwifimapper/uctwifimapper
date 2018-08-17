@@ -2,6 +2,22 @@ import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+
+/*
+*
+* Application launcher class
+*
+* - Setup and start http server listening on port 8800
+*
+* Queries received will be routed to the corresponding handler methods
+*
+* The Api:
+* http://localhost:8800/apn to either get data from server or to post data to server
+* Any other query will return a default message
+*
+* */
+
+
 public class WifiMapperServer {
 
     public static void main(String [] args){

@@ -6,10 +6,24 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.sql.*;
+
+/*
+* - Class responsible for processing the query received by the server.
+*
+* 1. If the request is a GET, it splits the query to get the column and value pairs.
+* 2. If its a POST it checks values
+*
+*  After processing the request payload, the data is sent to (AccessPointDao)database access object which
+*  performs actual query to get/save data from database
+*
+* - Class responsible for sending response to client.
+*
+*
+* */
 
 public class WifiMapperRouter {
 
+    //For other queries not part of api, return generic response
     public static void rootRequest(HttpExchange exchange){
         try{
             String response = "Welcome to WifiMapper.";
@@ -23,7 +37,12 @@ public class WifiMapperRouter {
     }
 
     /*
-    *   GET:  /apn/location?latitude;longitude OR /apn/location?latitude;longitude;radius OR /apn/name?"name" OR /apn/bssid/""
+    *   Method processes requests for endpoint /apn
+    *   1. Split request object into column:value pair
+    *   2. Send this pair to AccessPointDao for further processing
+    *   3. Send response from AccessPointDao to server for forwarding to client
+    *
+    *   GET:  example requests /apn/location?latitude;longitude OR /apn/location?latitude;longitude;radius OR /apn/name?"name" OR /apn/bssid/""
     *   POST: /apn Json payload example {"bssid":"ee:00:8c:b8:b7:01", "ssid":"Eduroam", "location" : {"x":-34.1638945, "y":18.4208423}, "linkSpeed":200}
     * */
     public static void apnRequest(HttpExchange exchange) {
@@ -34,22 +53,17 @@ public class WifiMapperRouter {
 
             case "GET":
 
-                String [] query = exchange.getRequestURI().getQuery().split("=", 2);
+                String [] query = exchange.getRequestURI().getQuery().split("=", 2); //Process request payload
 
                 accessPointDao = new AccessPointDao();
 
                 String jsonResponse = "{\"generic\" : \"error\"}";
 
-                System.out.println(""+query.length);
-                for (int i=0; i<query.length; i++) {
-                    System.out.println(query[i]);
-                }
-
                 if(2 == query.length) {
-                    jsonResponse = new Gson().toJson(accessPointDao.get(query[0], query[1]));
+                    jsonResponse = new Gson().toJson(accessPointDao.get(query[0], query[1])); //Forward to AccessPointDao for further processing
                 }
 
-                sendResponse(exchange, "application/json", 200, jsonResponse);
+                sendResponse(exchange, "application/json", 200, jsonResponse); //send response to client
 
                 break;
 
@@ -90,6 +104,11 @@ public class WifiMapperRouter {
         }
     }
 
+    /*
+    * Method responsible for sending response to client
+    * 1. Set content type to Json, since response will be in Json format
+    * 2. Set responce code 200 for success and 400 for error/fail
+    * */
     private static void sendResponse(HttpExchange exchange, String contentType, int responseCode, String responseBody){
 
         try {

@@ -1,9 +1,18 @@
 import java.util.List;
 import java.util.Optional;
 
+/*
+* Interface class for Data Access Object using Data access object pattern
+* http://www.oracle.com/technetwork/java/dataaccessobject-138824.html
+* https://www.baeldung.com/java-dao-pattern
+*
+*
+* Generic interface for mapping database data to objects.
+* This separates the code for performing actual database queries from the business logic.
+*
+*
+* */
 public interface Dao<T> {
-
-    Optional<T> get(long id);
 
     List<T> get(String column, String value);
 

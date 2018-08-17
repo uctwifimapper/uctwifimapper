@@ -4,7 +4,13 @@ import org.postgresql.util.PGobject;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+
+/*
+* Class implements DAO interface
+*
+* The class performs queries for getting access points and savind access points in the database
+*
+* */
 
 public class AccessPointDao implements Dao<AccessPoint> {
 
@@ -14,11 +20,16 @@ public class AccessPointDao implements Dao<AccessPoint> {
         connection = Database.getConnection();
     }
 
-    @Override
-    public Optional<AccessPoint> get(long id) {
-        return null;
-    }
-
+    /*
+    * Get list of access points according to query passed
+    * 1. Perform sql SELECT query
+    * 2. Map response to access point object
+    * 3. return list of objects to requester.
+    *
+    * Column - the column in the table to look up the data
+    * Value - The data that's being looked up in the database column.
+    * return - list of access point(s)
+    * */
     @Override
     public List<AccessPoint> get(String column, String value) {
 
@@ -37,7 +48,7 @@ public class AccessPointDao implements Dao<AccessPoint> {
                         bssid.setValue(value);
                         bssid.setType("macaddr");
 
-                        query = "SELECT * FROM access_point WHERE bssid'" + bssid + "'";
+                        query = "SELECT * FROM access_point WHERE bssid = '" + bssid + "'";
 
                     }catch (Exception e){
                         e.printStackTrace();
@@ -95,6 +106,12 @@ public class AccessPointDao implements Dao<AccessPoint> {
         return get("","");
     }
 
+    /*
+    * Method responsible for saving data to database
+    * 1. input - the access point to save
+    * 2. perform INSERT query
+    * 3. response -true if successfully saved, false otherwise
+    * */
     @Override
     public boolean save(AccessPoint accessPoint) {
 

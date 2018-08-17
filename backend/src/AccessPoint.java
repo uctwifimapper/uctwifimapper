@@ -1,10 +1,15 @@
 import org.postgresql.geometric.PGpoint;
 
+/*
+* Business model for the access point
+* This class represents an access point
+* */
+
 public class AccessPoint {
-    private String name;
-    private String bssid;
-    private String ssid;
-    private PGpoint location;
+    private String name; //name of point e.g computer science level 1
+    private String bssid; //Unique mac address of wireless router
+    private String ssid; //Network identifier e.g eduroam
+    private PGpoint location; //location of the router
     private int linkSpeed;
 
     public String getName() {
