@@ -8,6 +8,9 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
 /*
+
+/* Authors: Martin Flanagan, Leith Coupland, Tawanda Muhwati
+
 * - Class responsible for processing the query received by the server.
 *
 * 1. If the request is a GET, it splits the query to get the column and value pairs.

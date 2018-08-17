@@ -2,6 +2,8 @@ import java.util.List;
 import java.util.Optional;
 
 /*
+/* Authors: Martin Flanagan, Leith Coupland, Tawanda Muhwati
+
 * Interface class for Data Access Object using Data access object pattern
 * http://www.oracle.com/technetwork/java/dataaccessobject-138824.html
 * https://www.baeldung.com/java-dao-pattern

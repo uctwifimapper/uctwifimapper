@@ -5,6 +5,8 @@ import java.net.InetSocketAddress;
 
 /*
 *
+* Authors: Martin Flanagan, Leith Coupland, Tawanda Muhwati
+*
 * Application launcher class
 *
 * - Setup and start http server listening on port 8800

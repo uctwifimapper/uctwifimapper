@@ -36,6 +36,9 @@ import retrofit2.Response;
 
 
 /*
+
+/* Authors: Martin Flanagan, Leith Coupland, Tawanda Muhwati
+
 * Activity responsible for:
 * 1. loading the map
 * 2. Getting user location

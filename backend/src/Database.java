@@ -1,6 +1,8 @@
 import java.sql.*;
 
 /*
+/* Authors: Martin Flanagan, Leith Coupland, Tawanda Muhwati
+
 *  Using singleton pattern.
 *  Only one instance of connection to database exists
 * */

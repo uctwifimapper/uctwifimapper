@@ -1,6 +1,9 @@
 import org.postgresql.geometric.PGpoint;
 
 /*
+
+/* Authors: Martin Flanagan, Leith Coupland, Tawanda Muhwati
+
 * Business model for the access point
 * This class represents an access point
 * */

@@ -7,6 +7,12 @@ import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+/*
+    Authors: Martin Flanagan, Leith Coupland, Tawanda Muhwati
+
+    Setups Retrofit singleton object that will be used for communicating with server
+    Contains business logic TODO implement more methods
+    */
 public class WifiMapController {
 
     Retrofit retrofit = null;

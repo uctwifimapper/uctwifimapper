@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /*
+/* Authors: Martin Flanagan, Leith Coupland, Tawanda Muhwati
+
 * Class implements DAO interface
 *
 * The class performs queries for getting access points and savind access points in the database

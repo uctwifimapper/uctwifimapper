@@ -2,6 +2,13 @@ package uct.wifimapp;
 
 import com.google.gson.annotations.SerializedName;
 
+/*
+* Authors: Martin Flanagan, Leith Coupland, Tawanda Muhwati
+*
+* Business Object, represent a wifi access point
+*
+* */
+
 public class AccessPoint {
     @SerializedName("name")
     public String name;
