@@ -22,16 +22,45 @@ public class AccessPointDao implements Dao<AccessPoint> {
     @Override
     public List<AccessPoint> get(String column, String value) {
 
-        String query;
+        String query = "";
         List<AccessPoint> apnList = new ArrayList<>();
 
         if(column.isEmpty() && value.isEmpty()){ //For test purposes
             query = "SELECT * FROM access_point";
         }else{
-            query = "SELECT * FROM access_point WHERE '" + column + "'='" + value + "'";
-        }
 
-        System.out.println(query);
+            switch (column){
+                case "bssid":
+
+                    try {
+                        PGobject bssid = new PGobject();
+                        bssid.setValue(value);
+                        bssid.setType("macaddr");
+
+                        query = "SELECT * FROM access_point WHERE bssid'" + bssid + "'";
+
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+
+                    break;
+                case "location":
+
+                    String [] coordinates = value.split(";",2);
+
+                    if(2 == coordinates.length){ //TODO improve query
+                        query = "SELECT * FROM access_point ORDER BY location <-> " +
+                                "POINT("+Double.parseDouble(coordinates[0])+","+Double.parseDouble(coordinates[1])+")::point LIMIT 1";
+                    }
+
+                    break;
+                case "name":
+                    query = "SELECT * FROM access_point WHERE name = '" + value + "'";
+                    break;
+
+                    default:break;
+            }
+        }
 
         try(Statement statement = connection.createStatement()) {
 
@@ -41,7 +70,7 @@ public class AccessPointDao implements Dao<AccessPoint> {
 
                     AccessPoint apn = new AccessPoint();
                     apn.setBssid(resultSet.getString("bssid"));
-                    apn.setLinkSpeed(resultSet.getInt("link_speed"));
+                    apn.setLinkSpeed(resultSet.getInt("linkSpeed"));
                     apn.setSsid(resultSet.getString("ssid"));
 
                     if (resultSet.getString("location") != null) {
@@ -85,7 +114,6 @@ public class AccessPointDao implements Dao<AccessPoint> {
         }catch (SQLException e){
             return false;
         }
-
     }
 
     @Override

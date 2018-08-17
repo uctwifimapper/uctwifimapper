@@ -10,6 +10,18 @@ frequency,
 link_speed
 }
 
+String bssid = exchange.getRequestURI().getQuery();
+                    PGobject pGobject = new PGobject();
+                    pGobject.setValue(bssid);
+                    pGobject.setType("macaddr");
+
+                    String query = "SELECT * FROM access_point WHERE bssid='"+bssid+"'";
+
+                    Statement statement = connection.createStatement();
+                    ResultSet resultSet = statement.executeQuery(query);
+
+                    AccessPoint apn = new AccessPoint();
+
 //ST_DWithin(coords, ST_GeomFromText('POINT(-12.5842 24.4944)',4326), 1)
                     //String query = "SELECT * FROM access_point WHERE ST_DWithin(location,'POINT("+lat+" "+lon+")' ,4326), 20)";
                     //String query = "SELECT * FROM access_point ORDER BY location <-> ST_SetSRID(ST_MakePoint("+lat+","+lon+"),4326) LIMIT 1";
