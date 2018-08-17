@@ -1,7 +1,5 @@
 package uct.wifimapp;
 
-import android.location.Location;
-
 import com.google.gson.annotations.SerializedName;
 
 public class AccessPoint {
@@ -54,5 +52,16 @@ public class AccessPoint {
 
     public void setLinkSpeed(int linkSpeed) {
         this.linkSpeed = linkSpeed;
+    }
+
+    @Override
+    public String toString() {
+        return "AccessPoint{" +
+                "name='" + name + '\'' +
+                ", bssid='" + bssid + '\'' +
+                ", ssid='" + ssid + '\'' +
+                ", location=" + location +
+                ", linkSpeed=" + linkSpeed +
+                '}';
     }
 }

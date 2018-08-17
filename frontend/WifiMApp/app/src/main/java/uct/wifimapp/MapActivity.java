@@ -10,6 +10,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -19,8 +20,19 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
+
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MapActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -28,7 +40,9 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     private FusedLocationProviderClient mFusedLocationClient;
     private Location mCurrentLocation;
     private LatLngBounds UCT = new LatLngBounds(
-            new LatLng(--33.9619445, 18.4592913), new LatLng(-33.9508155, 18.4648683)); //set bounds for map
+            new LatLng(-33.9619445, 18.4592913), new LatLng(-33.9508155, 18.4648683)); //set bounds for map
+    private int LOCATION_REQUEST_PERMISSION = 1001;
+    private WifiMapController wifiMapController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,30 +53,54 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        getWifiLocations();
+
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case 1001:
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    updateUserLocation();
+                }else {
+                    return;
+                }
+                break;
+                default:break;
+        }
+    }
+
+
+
+            /**
+             * Manipulates the map once available.
+             * This callback is triggered when the map is ready to be used.
+             * This is where we can add markers or lines, add listeners or move the camera. In this case,
+             * we just add a marker near Sydney, Australia.
+             * If Google Play services is not installed on the device, the user will be prompted to install
+             * it inside the SupportMapFragment. This method will only be triggered once the user has
+             * installed Google Play services and returned to the app.
+             */
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
+        mMap.setMyLocationEnabled(true);
+        //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(UCT.getCenter(), 0));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(UCT.getCenter(), 16));
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
-            mMap.setMyLocationEnabled(true);
+            updateUserLocation();
         } else {
             ActivityCompat.requestPermissions(this,
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    Manifest.permission.ACCESS_FINE_LOCATION);
+                    LOCATION_REQUEST_PERMISSION);
         }
-        updateUserLocation();
     }
 
     // Get the most recent user location and centre the camera on it.
@@ -79,15 +117,15 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                                 // Logic to handle location object.
                                 mCurrentLocation = location; // NOTE: This does not seem to persist outside of this method (mCurrentLocation returns null elsewhere)
                                 LatLng currentLatLng = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-                                //mMap.addMarker(new MarkerOptions().position(currentLatLng).title("Your location"));
-                                mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(UCT.getCenter(), 0));
+                                mMap.addMarker(new MarkerOptions().position(currentLatLng).title("Your location"));
+                                //mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(UCT.getCenter(), 0));
                             }
                         }
                     });
         } else { //Show popup requesting location permission
             ActivityCompat.requestPermissions(this,
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    Manifest.permission.ACCESS_FINE_LOCATION);
+                    LOCATION_REQUEST_PERMISSION);
         }
     }
 
@@ -124,6 +162,50 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         } else {
             return -1;
         }
+    }
+
+    private void getWifiLocations(){
+
+        Map<String,String> payload = new HashMap<String, String>();
+        payload.put("ssid", "eduroam");
+        Call<List<AccessPoint>> call = wifiMapController.getInstance().getApn(payload);
+        Log.d("MapActivity - payload", payload.toString());
+        call.enqueue(new Callback<List<AccessPoint>>(){
+            /**
+             * Invoked for a received HTTP response.
+             * <p>
+             * Note: An HTTP response may still indicate an application-level failure such as a 404 or 500.
+             * Call {@link Response#isSuccessful()} to determine if the response indicates success.
+             *
+             * @param call
+             * @param response
+             */
+            @Override
+            public void onResponse(Call<List<AccessPoint>> call, Response<List<AccessPoint>> response) {
+
+                Log.d("MapActivity", response.body().toString());
+
+                if(response.isSuccessful()){
+                    for(AccessPoint accessPoint : response.body()) {
+                        LatLng currentLatLng = new LatLng(accessPoint.location.getLatitude(), accessPoint.location.getLongitude());
+                        mMap.addMarker(new MarkerOptions().position(currentLatLng).title(accessPoint.name));
+                        Log.d("MapActivity", accessPoint.toString());
+                    }
+                }
+            }
+
+            /**
+             * Invoked when a network exception occurred talking to the server or when an unexpected
+             * exception occurred creating the request or processing the response.
+             *
+             * @param call
+             * @param t
+             */
+            @Override
+            public void onFailure(Call<List<AccessPoint>> call, Throwable t) {
+
+            }
+        });
     }
 
 }

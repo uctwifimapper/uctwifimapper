@@ -1,7 +1,7 @@
 package uct.wifimapp;
 
-import java.util.Dictionary;
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Retrofit;
@@ -21,7 +21,7 @@ public class WifiMapController {
         }
 
         if (null == wifiMapService) {
-            String baseURL = "";
+            String baseURL = "http://10.0.2.2:8800/"; //localhost
 
             instance.retrofit = new Retrofit.Builder()
                     .baseUrl(baseURL)
@@ -34,7 +34,7 @@ public class WifiMapController {
         return instance;
     }
 
-    public Call<List<AccessPoint>> getApn(Dictionary<?,?> query) {
+    public Call<List<AccessPoint>> getApn(Map<String,String> query) {
         Call<List<AccessPoint>> call = wifiMapService.getApn(query);
         return call;
     }
