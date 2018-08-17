@@ -27,6 +27,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     private GoogleMap mMap;
     private FusedLocationProviderClient mFusedLocationClient;
     private Location mCurrentLocation;
+    private LatLngBounds UCT = new LatLngBounds(
+            new LatLng(--33.9619445, 18.4592913), new LatLng(-33.9508155, 18.4648683)); //set bounds for map
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +58,9 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                 == PackageManager.PERMISSION_GRANTED) {
             mMap.setMyLocationEnabled(true);
         } else {
-            // Show rationale and request permission.
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    Manifest.permission.ACCESS_FINE_LOCATION);
         }
         updateUserLocation();
     }
@@ -76,12 +80,14 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                                 mCurrentLocation = location; // NOTE: This does not seem to persist outside of this method (mCurrentLocation returns null elsewhere)
                                 LatLng currentLatLng = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
                                 //mMap.addMarker(new MarkerOptions().position(currentLatLng).title("Your location"));
-                                mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLatLng));
+                                mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(UCT.getCenter(), 0));
                             }
                         }
                     });
-        } else {
-            // Show rationale and request permission.
+        } else { //Show popup requesting location permission
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    Manifest.permission.ACCESS_FINE_LOCATION);
         }
     }
 
