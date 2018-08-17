@@ -34,6 +34,16 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+
+/*
+* Activity responsible for:
+* 1. loading the map
+* 2. Getting user location
+* 3. Getting wifi signal strengths
+* 4. Getting accesspoints available for current location/wifi network.
+* 5. Display markers on map
+* */
+
 public class MapActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
@@ -164,6 +174,9 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         }
     }
 
+    /*
+    * Request data from backend using retrofit
+    * */
     private void getWifiLocations(){
 
         Map<String,String> payload = new HashMap<String, String>();
@@ -183,13 +196,9 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             @Override
             public void onResponse(Call<List<AccessPoint>> call, Response<List<AccessPoint>> response) {
 
-                Log.d("MapActivity", response.body().toString());
-
                 if(response.isSuccessful()){
                     for(AccessPoint accessPoint : response.body()) {
-                        LatLng currentLatLng = new LatLng(accessPoint.location.getLatitude(), accessPoint.location.getLongitude());
-                        mMap.addMarker(new MarkerOptions().position(currentLatLng).title(accessPoint.name));
-                        Log.d("MapActivity", accessPoint.toString());
+                        addWifiReading(accessPoint.location.getLatitude(), accessPoint.location.getLongitude(), (int)Math.floor(Math.random()*5));
                     }
                 }
             }
