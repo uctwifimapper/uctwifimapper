@@ -25,15 +25,13 @@ public class AccessPointDao implements Dao<AccessPoint> {
         String query;
         List<AccessPoint> apnList = new ArrayList<>();
 
-        if(column.isEmpty()) {
-            return apnList;
-        }else if(value.isEmpty()){
-            return apnList;
-        }else if(column.isEmpty() && value.isEmpty()){ //For test purposes
+        if(column.isEmpty() && value.isEmpty()){ //For test purposes
             query = "SELECT * FROM access_point";
         }else{
             query = "SELECT * FROM access_point WHERE '" + column + "'='" + value + "'";
         }
+
+        System.out.println(query);
 
         try(Statement statement = connection.createStatement()) {
 

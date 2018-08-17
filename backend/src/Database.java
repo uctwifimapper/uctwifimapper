@@ -17,7 +17,7 @@ public class Database {
             return connection;
         }
 
-        return getConnection();
+        return getConnection("jdbc:postgresql://127.0.0.1:5432/wifimapper", "postgres", "tawanda");
     }
 
     private static Connection getConnection(String db, String user, String password) {
@@ -26,7 +26,7 @@ public class Database {
 
             Class.forName("org.postgresql.Driver");
 
-            connection = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/wifimapper", "postgres", "tawanda");
+            connection = DriverManager.getConnection(db, user, password);
 
         } catch (Exception e) {
             e.printStackTrace();

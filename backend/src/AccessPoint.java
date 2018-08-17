@@ -1,10 +1,19 @@
 import org.postgresql.geometric.PGpoint;
 
 public class AccessPoint {
+    private String name;
     private String bssid;
     private String ssid;
     private PGpoint location;
     private int linkSpeed;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 
     public String getBssid() {
         return bssid;

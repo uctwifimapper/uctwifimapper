@@ -34,19 +34,22 @@ public class WifiMapperRouter {
 
             case "GET":
 
-                //TODO: Create method to handle payload request
-                String payload = exchange.getRequestURI().getQuery();
-                String[] point = payload.split(";", 3);
-                Double lat = Double.parseDouble(point[0]);
-                Double lon = Double.parseDouble(point[1]);
-                int radius;
-                if (point.length == 3 && null != point[3]) {
-                    radius = Integer.parseInt(point[3]);
-                }
+                String [] query = exchange.getRequestURI().getQuery().split("=", 2);
 
                 accessPointDao = new AccessPointDao();
 
-                sendResponse(exchange, "application/json", 200, new Gson().toJson(accessPointDao.get("", payload)));
+                String jsonResponse = "{\"generic\" : \"error\"}";
+
+                System.out.println(""+query.length);
+                for (int i=0; i<query.length; i++) {
+                    System.out.println(query[i]);
+                }
+
+                if(2 == query.length) {
+                    jsonResponse = new Gson().toJson(accessPointDao.get(query[0], query[1]));
+                }
+
+                sendResponse(exchange, "application/json", 200, jsonResponse);
 
                 break;
 
@@ -74,15 +77,15 @@ public class WifiMapperRouter {
                 accessPointDao = new AccessPointDao();
 
                 if (accessPointDao.save(new Gson().fromJson(body.toString(), AccessPoint.class))) {
-                    sendResponse(exchange, "application/json", 200, new Gson().toJson("OK"));
+                    sendResponse(exchange, "application/json", 200, "{\"generic\":\"success\"}");
                 } else {
-                    sendResponse(exchange, "application/json", 400, new Gson().toJson("error"));
-
+                    sendResponse(exchange, "application/json", 400, new Gson().toJson("{\"generic\":\"error\"}"));
                 }
 
                 break;
 
             default:
+                sendResponse(exchange, "application/json", 400, new Gson().toJson("{\"generic\":\"error\"}"));
                 break;
         }
     }
