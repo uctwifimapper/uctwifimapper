@@ -54,6 +54,9 @@ public class AccessPointDao implements Dao<AccessPoint> {
                     }
 
                     break;
+                case "ssid":
+                    query = "SELECT * FROM access_point WHERE ssid = '" + value + "'";
+                    break;
                 case "name":
                     query = "SELECT * FROM access_point WHERE name = '" + value + "'";
                     break;
@@ -61,7 +64,7 @@ public class AccessPointDao implements Dao<AccessPoint> {
                     default:break;
             }
         }
-
+        System.out.println(query);
         try(Statement statement = connection.createStatement()) {
 
             try(ResultSet resultSet = statement.executeQuery(query)) {
