@@ -1,3 +1,4 @@
+import com.google.gson.Gson;
 import org.postgresql.geometric.PGpoint;
 import org.postgresql.util.PGobject;
 
@@ -74,10 +75,12 @@ public class AccessPointDao implements Dao<AccessPoint> {
                     query = "SELECT * FROM access_point WHERE name = '" + value + "'";
                     break;
 
-                    default:break;
+                    default:
+                        query = "SELECT * FROM access_point";
+                        break;
             }
         }
-        System.out.println(query);
+
         try(Statement statement = connection.createStatement()) {
 
             try(ResultSet resultSet = statement.executeQuery(query)) {
@@ -99,6 +102,8 @@ public class AccessPointDao implements Dao<AccessPoint> {
         }catch (SQLException e){
             e.printStackTrace();
         }
+
+        System.out.println("DB Response: "+new Gson().toJson(apnList));
 
         return apnList;
     }

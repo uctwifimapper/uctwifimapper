@@ -1,3 +1,4 @@
+import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
@@ -33,6 +34,12 @@ public class WifiMapperServer {
 
             HttpContext context2 = server.createContext("/apn");
             context2.setHandler(WifiMapperRouter::apnRequest);
+
+            HttpContext context3 = server.createContext("/admin");
+            context3.setHandler(WifiMapperRouter::adminRequest);
+
+            HttpContext context4 = server.createContext("/admin/js");
+            context4.setHandler(WifiMapperRouter::resourceRequest);
 
             server.start();
 
