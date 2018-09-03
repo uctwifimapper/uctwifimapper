@@ -2,6 +2,8 @@ package uct.wifimapp;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.wifi.WifiInfo;
@@ -11,6 +13,9 @@ import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -67,8 +72,31 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         mapFragment.getMapAsync(this);
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
+        SharedPreferences settings = getSharedPreferences("settings.txt", MODE_PRIVATE);
+        settings.edit().putBoolean("today", false);
+        settings.edit().putBoolean("upload", false);
+        settings.edit().putInt("min", 5);
+        settings.edit().apply();
+
         getWifiLocations();
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add("Settings");
+        MenuInflater infl = getMenuInflater();
+        infl.inflate(R.menu.settings_main_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.Settings ){
+            Intent set = new Intent(this,SettingsActivity.class);
+            startActivity(set);
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override

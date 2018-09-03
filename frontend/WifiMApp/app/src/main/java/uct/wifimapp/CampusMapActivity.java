@@ -1,5 +1,7 @@
 package uct.wifimapp;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -8,6 +10,9 @@ import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.GestureDetector;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
@@ -39,6 +44,12 @@ public class CampusMapActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+
+        SharedPreferences settings = getSharedPreferences("settings.txt", MODE_PRIVATE);
+        settings.getBoolean("today",false);
+        settings.edit().putBoolean("upload", false);
+        settings.edit().putInt("min", 5);
+        settings.edit().apply();
 
         mImageView = (ImageView)findViewById(R.id.imageView);
         mScaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
@@ -72,6 +83,23 @@ public class CampusMapActivity extends AppCompatActivity {
         public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY){
             return true;
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add("Settings");
+        MenuInflater infl = getMenuInflater();
+        infl.inflate(R.menu.settings_main_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.Settings ){
+            Intent set = new Intent(this,SettingsActivity.class);
+            startActivity(set);
+        }
+        return super.onOptionsItemSelected(item);
     }
 
 }

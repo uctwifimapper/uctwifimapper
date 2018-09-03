@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/linearLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!--TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="26dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
+        android:text="See today's readings"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="201dp"
+        android:layout_height="36dp"
+        android:layout_marginStart="16dp"
+        android:text="Data collection and Uploading of readings"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteY="80dp" />
+
+    <Switch
+        android:id="@+id/sw_WiFi_readings"
+        android:layout_width="45dp"
+        android:layout_height="35dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:layout_editor_absoluteY="82dp" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="158dp"
+        android:layout_height="22dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:text="Refresh map after every "
+        app:layout_constraintEnd_toStartOf="@+id/txf_Minutes"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteY="154dp" />
+
+    <EditText
+        android:id="@+id/txf_Minutes"
+        android:layout_width="69dp"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="number"
+        tools:layout_editor_absoluteX="185dp"
+        tools:layout_editor_absoluteY="143dp"
+        tools:text="5" />
+
+    <Button
+        android:id="@+id/btn_Save"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="500dp"
+        android:text="Save"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Switch
+        android:id="@+id/sw_today"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginStart="8dp"
+        android:text="minutes"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/txf_Minutes"
+        tools:layout_editor_absoluteY="157dp" /-->
+
+</android.support.constraint.ConstraintLayout>
