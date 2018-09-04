@@ -17,18 +17,19 @@ public class WifiReadingZone {
         wifiReadings.add(reading);
     }
 
-    public float averageStrength(){
-        float total = 0;
-
-        for (WifiReading reading : wifiReadings){
-            total += (float)reading.strength();
+    public int averageStrength(){
+        if (wifiReadings.size() == 0){
+            return -1;
+        } else {
+            float total = 0;
+            for (WifiReading reading : wifiReadings) {
+                total += (float) reading.strength();
+            }
+            return Math.round(total / (float) wifiReadings.size());
         }
-
-        return total / (float)wifiReadings.size();
     }
 
     public void reset(){
         wifiReadings.clear();
     }
-
 }

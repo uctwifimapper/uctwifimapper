@@ -5,21 +5,21 @@ package uct.wifimapp;
  */
 public class WifiReading {
 
-    private int latitude;
-    private int longitude;
+    private double latitude;
+    private double longitude;
     private int strength;
 
-    public WifiReading( int _latitude, int _longitude, int _strength){
+    public WifiReading( double _latitude, double _longitude, int _strength){
         latitude = _latitude;
         longitude = _longitude;
         strength = _strength;
     }
 
-    public int latitude(){
+    public double latitude(){
         return latitude;
     }
 
-    public int longitude(){
+    public double longitude(){
         return longitude;
     }
 

@@ -27,6 +27,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polygon;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.Dictionary;
@@ -34,13 +36,11 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
-
-/*
 
 /* Authors: Martin Flanagan, Leith Coupland, Tawanda Muhwati
 
@@ -57,20 +57,43 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     private GoogleMap mMap;
     private FusedLocationProviderClient mFusedLocationClient;
     private Location mCurrentLocation;
-    private LatLngBounds UCT = new LatLngBounds(
-            new LatLng(-33.9619445, 18.4592913), new LatLng(-33.9508155, 18.4648683)); //set bounds for map
+    private WifiReadingManager wifiReadingManager;
+
+    /*private LatLngBounds UCT = new LatLngBounds(
+            new LatLng(-33.9619445, 18.4592913), new LatLng(-33.9508155, 18.4648683)); //set bounds for map*/
     private int LOCATION_REQUEST_PERMISSION = 1001;
     private WifiMapController wifiMapController;
+
+    private LatLng mapStartLatLng = new LatLng(-33.960848, 18.456848); // Bottom-left corner of map area.
+    private double zoneSize = 0.0002000; // Size of grid squares in DD coords.
+    private int numZonesX = 32;
+    private int numZonesY = 32;
+
+    private LatLngBounds UCT = new LatLngBounds( // Map bounds based on grid.
+            mapStartLatLng, new LatLng(mapStartLatLng.latitude + zoneSize * numZonesY, mapStartLatLng.longitude + zoneSize * numZonesX));
+
+    private static final int COLOR_BLACK_ARGB = 0x20ff0000;
+    private static final int COLOR_GREY_ARGB = 0x20878787;
+    private static final int COLOR_RED_ARGB = 0x20af001a;
+    private static final int COLOR_ORANGE_ARGB = 0x20d85d00;
+    private static final int COLOR_YELLOW_ARGB = 0x20ffd711;
+    private static final int COLOR_GREEN_ARGB = 0x2047b200;
+    private static final int COLOR_BLUE_ARGB = 0x2000bca0;
+    private static final int POLYGON_STROKE_WIDTH_PX = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        wifiReadingManager = new WifiReadingManager(mapStartLatLng.latitude, mapStartLatLng.longitude, zoneSize, numZonesX, numZonesY);
+        populateRandomReadings();
 
         SharedPreferences settings = getSharedPreferences("settings.txt", MODE_PRIVATE);
         settings.edit().putBoolean("today", false);
@@ -79,7 +102,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         settings.edit().apply();
 
         getWifiLocations();
-
     }
 
     @Override
@@ -106,42 +128,31 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             case 1001:
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    updateUserLocation();
+                    //updateUserLocation();
                 }else {
                     return;
                 }
                 break;
-                default:break;
+            default: break;
         }
     }
 
-
-
-            /**
-             * Manipulates the map once available.
-             * This callback is triggered when the map is ready to be used.
-             * This is where we can add markers or lines, add listeners or move the camera. In this case,
-             * we just add a marker near Sydney, Australia.
-             * If Google Play services is not installed on the device, the user will be prompted to install
-             * it inside the SupportMapFragment. This method will only be triggered once the user has
-             * installed Google Play services and returned to the app.
-             */
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
-        mMap.setMyLocationEnabled(true);
         //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(UCT.getCenter(), 0));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(UCT.getCenter(), 16));
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
-            updateUserLocation();
+            mMap.setMyLocationEnabled(true);
+            //updateUserLocation();
         } else {
             ActivityCompat.requestPermissions(this,
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
                     LOCATION_REQUEST_PERMISSION);
         }
+        drawMapGrid(wifiReadingManager.getAverageZoneSignalLevels());
     }
 
     // Get the most recent user location and centre the camera on it.
@@ -155,7 +166,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                         public void onSuccess(Location location) {
                             // Got last known location. In some rare situations this can be null.
                             if (location != null) {
-                                // Logic to handle location object.
                                 mCurrentLocation = location; // NOTE: This does not seem to persist outside of this method (mCurrentLocation returns null elsewhere)
                                 LatLng currentLatLng = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
                                 mMap.addMarker(new MarkerOptions().position(currentLatLng).title("Your location"));
@@ -170,28 +180,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         }
     }
 
-    // Add a map marker displaying a wifi signal strength reading. (To be replaced by colour coded zones in final app)
-    private void addWifiReading(double latitude, double longitude, int strength){
-        if (strength < 0 || strength > 4){ // Use enum or something for strength in next version
-            return;
-        }
-
-        float markerColour;
-        switch (strength){
-            case 0 : markerColour = BitmapDescriptorFactory.HUE_RED; break;
-            case 1 : markerColour = BitmapDescriptorFactory.HUE_ORANGE; break;
-            case 2 : markerColour = BitmapDescriptorFactory.HUE_YELLOW; break;
-            case 3 : markerColour = BitmapDescriptorFactory.HUE_GREEN; break;
-            case 4 : markerColour = BitmapDescriptorFactory.HUE_CYAN; break;
-            default : markerColour = BitmapDescriptorFactory.HUE_ROSE; break;
-        }
-
-        mMap.addMarker(new MarkerOptions()
-                .position(new LatLng( latitude,longitude))
-                .icon(BitmapDescriptorFactory.defaultMarker(markerColour)));
-    }
-
-    // Return current wifi signal strength level (0-5).
+    // Return current wifi signal strength level (0-4).
     private int currentWifiSignalLevel(){
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_WIFI_STATE)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -229,7 +218,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
 
                 if(response.isSuccessful()){
                     for(AccessPoint accessPoint : response.body()) {
-                        addWifiReading(accessPoint.location.getLatitude(), accessPoint.location.getLongitude(), (int)Math.floor(Math.random()*5));
+                        //addWifiReading(accessPoint.location.getLatitude(), accessPoint.location.getLongitude(), (int)Math.floor(Math.random()*5));
                     }
                 }
             }
@@ -248,4 +237,82 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         });
     }
 
+    private void drawMapGrid(int[][] signalLevels){
+        for (int x = 0; x < numZonesX; x++) {
+            for (int y = 0; y < numZonesY; y++) {
+                LatLng bottomLeft = new LatLng(mapStartLatLng.latitude + y * zoneSize, mapStartLatLng.longitude + x * zoneSize);
+                Polygon polygon = mMap.addPolygon(new PolygonOptions()
+                        .clickable(false)
+                        .add(
+                                new LatLng(bottomLeft.latitude, bottomLeft.longitude),
+                                new LatLng(bottomLeft.latitude + zoneSize, bottomLeft.longitude),
+                                new LatLng(bottomLeft.latitude + zoneSize, bottomLeft.longitude + zoneSize),
+                                new LatLng(bottomLeft.latitude, bottomLeft.longitude + zoneSize)));
+                polygon.setTag("" + signalLevels[x][y]);
+                stylePolygon(polygon);
+            }
+        }
+    }
+
+    private void stylePolygon(Polygon polygon){
+        String type = "";
+        if (polygon.getTag() != null){
+            type = polygon.getTag().toString();
+        }
+        int strokeColor = 0x00000000;
+        int fillColor = COLOR_GREY_ARGB;
+        switch (type){
+            case "-1": fillColor = 0x00000000;
+                break;
+            case "0": fillColor = COLOR_RED_ARGB;
+                break;
+            case "1": fillColor = COLOR_ORANGE_ARGB;
+                break;
+            case "2": fillColor = COLOR_YELLOW_ARGB;
+                break;
+            case "3": fillColor = COLOR_GREEN_ARGB;
+                break;
+            case "4": fillColor = COLOR_BLUE_ARGB;
+                break;
+            default:
+                break;
+        }
+        polygon.setStrokeWidth(POLYGON_STROKE_WIDTH_PX);
+        polygon.setStrokeColor(strokeColor);
+        polygon.setFillColor(fillColor);
+    }
+
+    private void populateRandomReadings(){
+        Random rand = new Random();
+        for (int i = 0; i < 300; i++){
+            double lat = mapStartLatLng.latitude + rand.nextDouble() * (numZonesY * zoneSize);
+            double lng = mapStartLatLng.longitude + rand.nextDouble() * (numZonesX * zoneSize);
+            int str = rand.nextInt(5);
+            WifiReading reading = new WifiReading(lat, lng, str);
+            wifiReadingManager.addWifiReading(reading);
+        }
+    }
+
+    /*
+    // Add a map marker displaying a wifi signal strength reading. (To be replaced by colour coded zones in final app)
+    private void addWifiReading(double latitude, double longitude, int strength){
+        if (strength < 0 || strength > 4){ // Use enum or something for strength in next version
+            return;
+        }
+
+        float markerColour;
+        switch (strength){
+            case 0 : markerColour = BitmapDescriptorFactory.HUE_RED; break;
+            case 1 : markerColour = BitmapDescriptorFactory.HUE_ORANGE; break;
+            case 2 : markerColour = BitmapDescriptorFactory.HUE_YELLOW; break;
+            case 3 : markerColour = BitmapDescriptorFactory.HUE_GREEN; break;
+            case 4 : markerColour = BitmapDescriptorFactory.HUE_CYAN; break;
+            default : markerColour = BitmapDescriptorFactory.HUE_ROSE; break;
+        }
+
+        mMap.addMarker(new MarkerOptions()
+                .position(new LatLng( latitude,longitude))
+                .icon(BitmapDescriptorFactory.defaultMarker(markerColour)));
+    }
+    */
 }

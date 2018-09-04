@@ -1,5 +1,7 @@
 package uct.wifimapp;
 
+import android.util.Log;
+
 /**
  * A class that holds all wifi reading data for the map,
  * map zone size and locations, and all required helper methods.
@@ -20,6 +22,12 @@ public class WifiReadingManager {
         zoneSize = _zoneSize;
         numZonesX = _numZonesX;
         numZonesY = _numZonesY;
+        wifiReadingZones = new WifiReadingZone[numZonesX][numZonesY];
+        for (int x = 0; x < numZonesX; x++){
+            for (int y = 0; y < numZonesY; y++){
+                wifiReadingZones[x][y] = new WifiReadingZone();
+            }
+        }
     }
 
     // Add a reading to the app's stored map data
@@ -42,9 +50,19 @@ public class WifiReadingManager {
                 reading.latitude() > mapStartLat + numZonesY * zoneSize ||
                 reading.longitude() < mapStartLng ||
                 reading.longitude() > mapStartLng + numZonesX * zoneSize){
+            Log.d("reading", "READING OUT OF BOUNDS (" + reading.latitude() + " " + reading.longitude() + ")");
             return true;
         }
         return false;
     }
 
+    public int[][] getAverageZoneSignalLevels(){
+        int[][] zoneAverages = new int[numZonesX][numZonesY];
+        for (int x = 0; x < numZonesX; x++){
+            for (int y = 0; y < numZonesY; y++){
+                zoneAverages[x][y] = wifiReadingZones[x][y].averageStrength();
+            }
+        }
+        return zoneAverages;
+    }
 }

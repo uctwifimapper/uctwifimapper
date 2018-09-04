@@ -120,4 +120,5 @@ public class GoogleMapActivity extends FragmentActivity implements OnMapReadyCal
         }
     }
 
+
 }
