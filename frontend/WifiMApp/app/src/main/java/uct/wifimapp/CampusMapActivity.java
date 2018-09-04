@@ -87,7 +87,6 @@ public class CampusMapActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add("Settings");
         MenuInflater infl = getMenuInflater();
         infl.inflate(R.menu.settings_main_menu, menu);
         return super.onCreateOptionsMenu(menu);
