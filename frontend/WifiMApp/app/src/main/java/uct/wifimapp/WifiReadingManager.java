@@ -40,11 +40,6 @@ public class WifiReadingManager {
         wifiReadingZones[zoneX][zoneY].addWifiReading(reading);
     }
 
-    // Upload reading of wifi signal strength at the current location to the server
-    public void broadcastWifiReading(){
-        // TODO
-    }
-
     private boolean readingOutOfBounds(WifiReading reading){
         if (reading.latitude() < mapStartLat ||
                 reading.latitude() > mapStartLat + numZonesY * zoneSize ||

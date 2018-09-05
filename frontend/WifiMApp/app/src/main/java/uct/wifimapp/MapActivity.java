@@ -23,16 +23,12 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 
-import java.util.Dictionary;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,9 +50,8 @@ import retrofit2.Response;
 
 public class MapActivity extends FragmentActivity implements OnMapReadyCallback {
 
-    private GoogleMap mMap;
-    private FusedLocationProviderClient mFusedLocationClient;
-    private Location mCurrentLocation;
+    private GoogleMap map;
+    private FusedLocationProviderClient fusedLocationProviderClient;
     private WifiReadingManager wifiReadingManager;
 
     /*private LatLngBounds UCT = new LatLngBounds(
@@ -91,7 +86,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         wifiReadingManager = new WifiReadingManager(mapStartLatLng.latitude, mapStartLatLng.longitude, zoneSize, numZonesX, numZonesY);
         populateRandomReadings();
 
@@ -128,7 +123,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             case 1001:
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    //updateUserLocation();
                 }else {
                     return;
                 }
@@ -139,14 +133,12 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-        //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(UCT.getCenter(), 0));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(UCT.getCenter(), 16));
+        map = googleMap;
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(UCT.getCenter(), 16));
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
-            mMap.setMyLocationEnabled(true);
-            //updateUserLocation();
+            map.setMyLocationEnabled(true);
         } else {
             ActivityCompat.requestPermissions(this,
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
@@ -155,33 +147,35 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         drawMapGrid(wifiReadingManager.getAverageZoneSignalLevels());
     }
 
-    // Get the most recent user location and centre the camera on it.
-    private void updateUserLocation(){
-        //if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+    // Attempt to send a wifi reading to the server. If permission is granted, sendWifiReadingToServer is called.
+    private void attemptBroadcastWifiReading(){
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
-            mFusedLocationClient.getLastLocation()
+            fusedLocationProviderClient.getLastLocation()
                     .addOnSuccessListener(this, new OnSuccessListener<Location>() {
                         @Override
                         public void onSuccess(Location location) {
-                            // Got last known location. In some rare situations this can be null.
                             if (location != null) {
-                                mCurrentLocation = location; // NOTE: This does not seem to persist outside of this method (mCurrentLocation returns null elsewhere)
-                                LatLng currentLatLng = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-                                mMap.addMarker(new MarkerOptions().position(currentLatLng).title("Your location"));
-                                //mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(UCT.getCenter(), 0));
+                                LatLng currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
+                                int signalStrength = getCurrentWifiSignalLevel();
+                                sendWifiReadingToServer(currentLocation, signalStrength);
                             }
                         }
                     });
-        } else { //Show popup requesting location permission
+        } else { // Show pop-up requesting location permission.
             ActivityCompat.requestPermissions(this,
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
                     LOCATION_REQUEST_PERMISSION);
         }
     }
 
+    // Uploads a new wifi signal reading at the user's location to the server.
+    private void sendWifiReadingToServer(LatLng location, int signalStrength){
+        // TODO
+    }
+
     // Return current wifi signal strength level (0-4).
-    private int currentWifiSignalLevel(){
+    private int getCurrentWifiSignalLevel(){
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_WIFI_STATE)
                 == PackageManager.PERMISSION_GRANTED) {
             WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -241,7 +235,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         for (int x = 0; x < numZonesX; x++) {
             for (int y = 0; y < numZonesY; y++) {
                 LatLng bottomLeft = new LatLng(mapStartLatLng.latitude + y * zoneSize, mapStartLatLng.longitude + x * zoneSize);
-                Polygon polygon = mMap.addPolygon(new PolygonOptions()
+                Polygon polygon = map.addPolygon(new PolygonOptions()
                         .clickable(false)
                         .add(
                                 new LatLng(bottomLeft.latitude, bottomLeft.longitude),
@@ -259,10 +253,10 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         if (polygon.getTag() != null){
             type = polygon.getTag().toString();
         }
-        int strokeColor = 0x00000000;
+        int strokeColor = 0;
         int fillColor = COLOR_GREY_ARGB;
         switch (type){
-            case "-1": fillColor = 0x00000000;
+            case "-1": fillColor = 0;
                 break;
             case "0": fillColor = COLOR_RED_ARGB;
                 break;
@@ -292,27 +286,4 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             wifiReadingManager.addWifiReading(reading);
         }
     }
-
-    /*
-    // Add a map marker displaying a wifi signal strength reading. (To be replaced by colour coded zones in final app)
-    private void addWifiReading(double latitude, double longitude, int strength){
-        if (strength < 0 || strength > 4){ // Use enum or something for strength in next version
-            return;
-        }
-
-        float markerColour;
-        switch (strength){
-            case 0 : markerColour = BitmapDescriptorFactory.HUE_RED; break;
-            case 1 : markerColour = BitmapDescriptorFactory.HUE_ORANGE; break;
-            case 2 : markerColour = BitmapDescriptorFactory.HUE_YELLOW; break;
-            case 3 : markerColour = BitmapDescriptorFactory.HUE_GREEN; break;
-            case 4 : markerColour = BitmapDescriptorFactory.HUE_CYAN; break;
-            default : markerColour = BitmapDescriptorFactory.HUE_ROSE; break;
-        }
-
-        mMap.addMarker(new MarkerOptions()
-                .position(new LatLng( latitude,longitude))
-                .icon(BitmapDescriptorFactory.defaultMarker(markerColour)));
-    }
-    */
 }
