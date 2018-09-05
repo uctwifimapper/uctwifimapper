@@ -140,13 +140,13 @@ public class WifiMapperRouter {
 
         //String jquery = exchange.getRequestURI().toString();//+"admin/js/jquery-3.3.1.min.js";
         String address =  "http://"+exchange.getLocalAddress().getHostName() +":"+ exchange.getLocalAddress().getPort()+exchange.getRequestURI();
-        String jquery = address+"/js/jquery-3.3.1.min.js";
+        String jquery = address+"/resources/js/jquery-3.3.1.min.js";
         String dataTableJs = "//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js";
         String dataTableCss = "//cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css";
-        String wifiMapperJs = address+"/js/wifimapper.js";
-        String headerCss = address+"/js/header-login-signup.css";
-        String wifimapperCss = address+"/js/wifimapper.css";
-        String map=address+"/map";
+        String wifiMapperJs = address+"/resources/js/wifimapper.js";
+        String wifimapperCss = address+"/resources/css/wifimapper.css";
+        String map = address+"/map";
+        String login = address+"/login";
 
         String head =
                 "<!DOCTYPE html>"+
@@ -156,9 +156,8 @@ public class WifiMapperRouter {
                         "<script src=\""+jquery+"\"></script>"+
                         "<script src=\""+dataTableJs+"\"></script> "+
                         "<link rel=\"stylesheet\" type=\"text/css\" href=\""+wifimapperCss+"\">"+
-                        "<link rel=\"stylesheet\" type=\"text/css\" href=\""+headerCss+"\">"+
                         "<link rel=\"stylesheet\" type=\"text/css\" href=\""+dataTableCss+"\">"+
-                        "<link href='http://fonts.googleapis.com/css?family=Cookie' rel='stylesheet' type='text/css'>"+
+                        "<link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>"+
                         "</head> ";
 
         String header = "<header class=\"header-login-signup\">\n" +
@@ -168,13 +167,12 @@ public class WifiMapperRouter {
                 "\t\t<h1><a href=\"#\">UCT<span>Wifi Mapper</span></a></h1>\n" +
                 "\n" +
                 "\t\t<nav>\n" +
-                "\t\t\t<a href=\"#\" class=\"selected\">Home</a>\n" +
+                "\t\t\t<a href=\"#\" class=\"selected\">Dashboard</a>\n" +
                 "\t\t\t<a href=\""+map+"\">Map</a>\n" +
                 "\t\t</nav>\n" +
                 "\n" +
                 "\t\t<ul>\n" +
-                "\t\t\t<li><a href=\"#\">Login</a></li>\n" +
-                "\t\t\t<li><a href=\"#\">Sign up</a></li>\n" +
+                "\t\t\t<li><a href=\""+login+"\">Login</a></li>\n" +
                 "\t\t</ul>\n" +
                 "\n" +
                 "\t</div>\n" +

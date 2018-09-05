@@ -41,7 +41,7 @@ public class WifiMapperServer {
             HttpContext context4 = server.createContext("/admin/map");
             context4.setHandler(WifiMapperRouter::mapRequest);
 
-            HttpContext context5 = server.createContext("/admin/js");
+            HttpContext context5 = server.createContext("/admin/resources");
             context5.setHandler(WifiMapperRouter::resourceRequest);
 
             server.start();
