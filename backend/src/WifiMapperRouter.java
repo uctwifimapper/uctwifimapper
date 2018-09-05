@@ -146,6 +146,7 @@ public class WifiMapperRouter {
         String wifiMapperJs = address+"/js/wifimapper.js";
         String headerCss = address+"/js/header-login-signup.css";
         String demoCss = address+"/js/demo.css";
+        String map=address+"/map";
 
         String head =
                 "<!DOCTYPE html>"+
@@ -168,7 +169,7 @@ public class WifiMapperRouter {
                 "\n" +
                 "\t\t<nav>\n" +
                 "\t\t\t<a href=\"#\" class=\"selected\">Home</a>\n" +
-                "\t\t\t<a href=\"#\">Map</a>\n" +
+                "\t\t\t<a href=\""+map+"\">Map</a>\n" +
                 "\t\t</nav>\n" +
                 "\n" +
                 "\t\t<ul>\n" +
@@ -199,6 +200,32 @@ public class WifiMapperRouter {
         sendResponse(exchange, "text/html", 200, response);
     }
 
+    public static void mapRequest(HttpExchange exchange){
+
+        String line = "";
+        String response = "";
+        String rootFolder = Paths.get(".").toAbsolutePath().normalize().toString(); //..wifimapper/backend
+
+        String address =  exchange.getRequestURI().toString(); //"http://"+exchange.getLocalAddress().getHostName() +":"+ exchange.getLocalAddress().getPort()+exchange.getRequestURI();
+        System.out.println("Received "+address+" @ "+LocalDate.now());
+
+        try {
+            File resourceFile = new File(rootFolder+"/src/admin/map.html");
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(resourceFile)));
+
+            while ((line = bufferedReader.readLine()) != null) {
+                response += line;
+            }
+            bufferedReader.close();
+
+            sendResponse(exchange, "", 200, response);
+
+        } catch (IOException e) {
+            sendResponse(exchange, "text/html", 400, "");
+            e.printStackTrace();
+        }
+    }
+
     public static void resourceRequest(HttpExchange exchange){
 
         String line = "";
@@ -220,7 +247,7 @@ public class WifiMapperRouter {
             if(exchange.getRequestURI().toString().contains("css")) {
                 sendResponse(exchange, "text/css", 200, response);
             }else{
-                sendResponse(exchange, "application/js", 200, response);
+                sendResponse(exchange, "application/javascript", 200, response);
             }
 
         } catch (IOException e) {
