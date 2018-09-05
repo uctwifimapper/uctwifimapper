@@ -141,11 +141,11 @@ public class WifiMapperRouter {
         //String jquery = exchange.getRequestURI().toString();//+"admin/js/jquery-3.3.1.min.js";
         String address =  "http://"+exchange.getLocalAddress().getHostName() +":"+ exchange.getLocalAddress().getPort()+exchange.getRequestURI();
         String jquery = address+"/js/jquery-3.3.1.min.js";
-        String dataTableJs = "//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js";//address+"/js/jquery.dataTables.min.js";
-        String dataTableCss = "//cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css";//address+"/js/jquery.dataTables.min.css";
+        String dataTableJs = "//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js";
+        String dataTableCss = "//cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css";
         String wifiMapperJs = address+"/js/wifimapper.js";
         String headerCss = address+"/js/header-login-signup.css";
-        String demoCss = address+"/js/demo.css";
+        String wifimapperCss = address+"/js/wifimapper.css";
         String map=address+"/map";
 
         String head =
@@ -155,7 +155,7 @@ public class WifiMapperRouter {
                         "<title>WifiMapper</title>"+
                         "<script src=\""+jquery+"\"></script>"+
                         "<script src=\""+dataTableJs+"\"></script> "+
-                        "<link rel=\"stylesheet\" type=\"text/css\" href=\""+demoCss+"\">"+
+                        "<link rel=\"stylesheet\" type=\"text/css\" href=\""+wifimapperCss+"\">"+
                         "<link rel=\"stylesheet\" type=\"text/css\" href=\""+headerCss+"\">"+
                         "<link rel=\"stylesheet\" type=\"text/css\" href=\""+dataTableCss+"\">"+
                         "<link href='http://fonts.googleapis.com/css?family=Cookie' rel='stylesheet' type='text/css'>"+
