@@ -10,5 +10,6 @@
     <orderEntry type="library" name="gson-2.8.5" level="project" />
     <orderEntry type="library" name="postgresql-42.2.4" level="project" />
     <orderEntry type="library" name="postgis-jdbc-2.1.7.2" level="project" />
+    <orderEntry type="library" name="mustache-java-0.9.5" level="project" />
   </component>
 </module>
