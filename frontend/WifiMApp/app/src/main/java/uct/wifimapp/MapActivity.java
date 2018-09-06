@@ -136,7 +136,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
 
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(UCT.getCenter(), 18));
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(mapBounds.getCenter(), 18));
         map.getUiSettings().setZoomControlsEnabled(true);
         map.getUiSettings().setRotateGesturesEnabled(true);
         map.getUiSettings().setScrollGesturesEnabled(true);
