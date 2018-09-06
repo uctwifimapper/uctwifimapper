@@ -14,7 +14,7 @@ public class AccessPoint {
     private String ssid; //Network identifier e.g eduroam
     private PGpoint location; //location of the router
     private int linkSpeed;
-    private int timestamp; //unix timestamp
+    private long timestamp; //unix timestamp
 
     public String getName() {
         return name;
@@ -54,5 +54,13 @@ public class AccessPoint {
 
     public void setLinkSpeed(int linkSpeed) {
         this.linkSpeed = linkSpeed;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 }

@@ -1,8 +1,8 @@
+import com.google.gson.Gson;
+import org.postgresql.geometric.PGpoint;
 import org.postgresql.util.PGobject;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,17 +16,23 @@ public class SignalStrengthDao implements Dao<SignalStrength> {
     }
 
     public List<SignalStrength> get(String[] query) {
-        return null;
+        return this.get(query[0], query[1]);
     }
 
     private List<SignalStrength> get(String column, String value) {
 
-        String query;
+        String query = "";
         List<SignalStrength> signalStrengthList = new ArrayList<>();
 
         if(column.isEmpty() && value.isEmpty()){ //For test purposes
             query = "SELECT * FROM access_point";
         }else {
+
+            String [] values = new String [0];
+            if(value.contains("&")){
+                values = value.split("&");
+            }
+
             switch (column) {
                 case "bssid":
 
@@ -54,12 +60,52 @@ public class SignalStrengthDao implements Dao<SignalStrength> {
 
                     break;
                 case "timestamp":
-                    //TODO
+
+                    if (values.length > 0) {
+                        if(values[0].equals("d")){
+                            long date = System.currentTimeMillis() - (Long.valueOf(values[0])*24*60*60*1000);
+                            query = "SELECT * FROM " + table + " WHERE timestamp > '" + date + "'";
+                        }else if(values[0].equals("h")){
+                            long date = System.currentTimeMillis() - (Long.valueOf(values[0])*60*60*1000);
+                            query = "SELECT * FROM " + table + " WHERE timestamp > '" + date + "'";
+                        }else if(values[0].equals("m")){
+                            long date = System.currentTimeMillis() - (Long.valueOf(values[0])*60*1000);
+                            query = "SELECT * FROM " + table + " WHERE timestamp > '" + date + "'";
+                        }
+                    }else{
+                        query = "SELECT * FROM " + table + " WHERE timestamp < '" + System.currentTimeMillis() + "'";
+                    }
                     break;
                 default:
                     break;
             }
         }
+
+        System.out.println(query);
+
+        try(Statement statement = connection.createStatement()) {
+
+            try(ResultSet resultSet = statement.executeQuery(query)) {
+
+                while (resultSet.next()) {
+
+                    SignalStrength signalStrength = new SignalStrength();
+                    signalStrength.setBssid(resultSet.getString("bssid")!=null ? resultSet.getString("bssid") : "");
+                    signalStrength.setSignalStrength(resultSet.getInt("signalStrength"));
+                    signalStrength.setTimestamp(resultSet.getLong("timestamp"));
+
+                    if (resultSet.getString("location") != null) {
+                        signalStrength.setLocation(new PGpoint(resultSet.getString("location")));
+                    }
+
+                    signalStrengthList.add(signalStrength);
+                }
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+
+        System.out.println("DB Response: "+new Gson().toJson(signalStrengthList));
         return signalStrengthList;
     }
 
@@ -72,6 +118,7 @@ public class SignalStrengthDao implements Dao<SignalStrength> {
     @Override
     public boolean save(SignalStrength signalStrength) {
 
+        System.out.println("Save Signal Object: "+signalStrength);
         try {
             PGobject pGobject = new PGobject();
             pGobject.setValue(signalStrength.getBssid());
@@ -81,7 +128,7 @@ public class SignalStrengthDao implements Dao<SignalStrength> {
             preparedStatement.setObject(1, pGobject);
             preparedStatement.setInt(2, signalStrength.getSignalStrength());
             preparedStatement.setObject(3, signalStrength.getLocation());
-            preparedStatement.setInt(4, signalStrength.getTimestamp());
+            preparedStatement.setLong(4, System.currentTimeMillis());
 
             int response = preparedStatement.executeUpdate();
             preparedStatement.close();

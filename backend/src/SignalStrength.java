@@ -1,13 +1,18 @@
+import com.google.gson.annotations.SerializedName;
 import org.postgresql.geometric.PGpoint;
 
 import java.math.BigInteger;
 
 public class SignalStrength {
 
+    @SerializedName("bssid")
     private String bssid; //Unique mac address of wireless router
+    @SerializedName("signalStrength")
     private int signalStrength; //level of signal strength
+    @SerializedName("location")
     private PGpoint location; //location of the router
-    private int timestamp;
+    @SerializedName("timestamp")
+    private long timestamp;
 
     public String getBssid() {
         return bssid;
@@ -33,11 +38,21 @@ public class SignalStrength {
         this.location = location;
     }
 
-    public int getTimestamp() {
+    public long getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(int timestamp) {
+    public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    @Override
+    public String toString() {
+        return "SignalStrength{" +
+                "bssid='" + bssid + '\'' +
+                ", signalStrength=" + signalStrength +
+                ", location=" + location.getValue() +
+                ", timestamp=" + timestamp +
+                '}';
     }
 }

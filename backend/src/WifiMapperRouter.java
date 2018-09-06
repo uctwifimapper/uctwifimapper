@@ -165,6 +165,8 @@ public class WifiMapperRouter {
                     e.printStackTrace();
                 }
 
+                System.out.println("String Save: "+ body);
+
                 signalStrengthDao = new SignalStrengthDao();
 
                 if (signalStrengthDao.save(new Gson().fromJson(body.toString(), SignalStrength.class))) {
