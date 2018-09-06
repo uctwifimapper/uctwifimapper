@@ -1,110 +1,30 @@
 <!DOCTYPE html>
-<html>
 <head>
-    <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="http://localhost:8800/admin/js/demo.css">
-    <title>Heatmaps</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WifiMapper</title>
+    <script src="{{jquery}}"></script>
+    <script src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="{{wifimapperCss}}">
+    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
+    <link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
 </head>
+<header class="header-login-signup">
+    <div class="header-limiter">
+        <h1><a href="#"><span>UCT</span>Wifi Mapper</a></h1>
+        <nav>
+            <a href="#" class="selected">Map</a>
+        </nav>
+        <ul>
+            <li><a href="/login">Login</a></li>
+        </ul>
+    </div>
+</header>
 <body>
-<div id="floating-panel">
-</div>
-<div id="map"></div>
-<script>
-    var map, heatmap;
-
-    function getLocation() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(initMap);
-        } else {
-            initMap();
-        }
-    }
-
-    function initMap() {
-
-            var latitude = -33.9579131;
-            var longitude = 18.4632484;
-
-            console.log(latitude+" : "+longitude);
-
-            map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 16,
-                center: {lat: latitude, lng: longitude},
-                mapTypeId: 'roadmap'
-            });
-
-        heatmap = new google.maps.visualization.HeatmapLayer({
-            data: getPoints(),
-            map: map
-        });
-    }
-
-    function getPoints() {
-        return [
-            {
-                location: new google.maps.LatLng(-33.95751,18.46071),
-                weight: 1
-            },
-            {
-                location: new google.maps.LatLng(-33.95703,18.45886),
-                weight: 1
-            },
-            {
-                location: new google.maps.LatLng(-33.95798,18.458423),
-                weight: 1
-            },
-            {
-                location: new google.maps.LatLng(-33.95885,18.45778),
-                weight: 1
-            },
-            {
-                location: new google.maps.LatLng(-33.95843,18.45759),
-                weight: 1
-            },
-            {
-                location: new google.maps.LatLng(-33.95868,18.45736),
-                weight: 1
-            },
-            {
-                location: new google.maps.LatLng(-33.95868,18.45736),
-                weight: 1
-            },
-            {
-                location: new google.maps.LatLng(-33.96081,18.45828),
-                weight: 1
-            },
-            {
-                location: new google.maps.LatLng(-33.95541,18.46050),
-                weight: 1
-            },
-            {
-                location: new google.maps.LatLng(-33.95483,18.45781),
-                weight: 4
-            },
-            {
-                location: new google.maps.LatLng(-33.95650,18.460052),
-                weight: 1
-            },
-            {
-                location: new google.maps.LatLng(-33.95590,18.45957),
-                weight: 7
-            },{
-                location: new google.maps.LatLng(-33.95542,18.45895),
-                weight: 9
-            },
-            {
-                location: new google.maps.LatLng(-33.95591,18.45844),
-                weight: 3
-            },
-            {
-                location: new google.maps.LatLng(-33.95640,18.45884),
-                weight: 5
-            }
-        ];
-    }
-</script>
-<script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDRKkeWHQjnh9cwsNQWBT3zov4t7YX4MuE&libraries=visualization&callback=initMap">
-</script>
+<div id="results"></div>
 </body>
+<script src="{{wifiMapperJs}}"></script>
+<script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDRKkeWHQjnh9cwsNQWBT3zov4t7YX4MuE&libraries=visualization&callback=getLocation">
+</script>
 </html>

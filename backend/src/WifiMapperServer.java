@@ -30,7 +30,7 @@ public class WifiMapperServer {
             HttpServer server = HttpServer.create(new InetSocketAddress(8800), 0);
 
             HttpContext context = server.createContext("/");
-            context.setHandler(WifiMapperRouter::rootRequest);
+            context.setHandler(WifiMapperRouter::mapRequest);
 
             HttpContext context2 = server.createContext("/apn");
             context2.setHandler(WifiMapperRouter::apnRequest);
@@ -38,8 +38,8 @@ public class WifiMapperServer {
             HttpContext context3 = server.createContext("/admin");
             context3.setHandler(WifiMapperRouter::adminRequest);
 
-            HttpContext context4 = server.createContext("/admin/map");
-            context4.setHandler(WifiMapperRouter::mapRequest);
+            HttpContext context4 = server.createContext("/login");
+            context4.setHandler(WifiMapperRouter::loginRequest);
 
             HttpContext context5 = server.createContext("/admin/resources");
             context5.setHandler(WifiMapperRouter::resourceRequest);

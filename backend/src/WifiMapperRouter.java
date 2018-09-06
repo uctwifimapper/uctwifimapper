@@ -1,3 +1,6 @@
+import com.github.mustachejava.DefaultMustacheFactory;
+import com.github.mustachejava.Mustache;
+import com.github.mustachejava.MustacheFactory;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 
@@ -122,6 +125,11 @@ public class WifiMapperRouter {
         }
     }
 
+    /* Authenticate user and start session if correctly logged in */
+    public static void loginRequest(HttpExchange exchange){
+
+    }
+
     /*
     * Admin Queries
     *
@@ -135,10 +143,6 @@ public class WifiMapperRouter {
 
         System.out.println("Response sent: "+exchange.getRequestURI().toString() + " @ "+ LocalDate.now());
 
-        String line = "";
-        String rootFolder = Paths.get(".").toAbsolutePath().normalize().toString(); //..wifimapper/backend
-
-        //String jquery = exchange.getRequestURI().toString();//+"admin/js/jquery-3.3.1.min.js";
         String address =  "http://"+exchange.getLocalAddress().getHostName() +":"+ exchange.getLocalAddress().getPort()+exchange.getRequestURI();
         String jquery = address+"/resources/js/jquery-3.3.1.min.js";
         String dataTableJs = "//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js";
@@ -148,53 +152,18 @@ public class WifiMapperRouter {
         String map = address+"/map";
         String login = address+"/login";
 
-        String head =
-                "<!DOCTYPE html>"+
-                        "<head><meta charset=\"UTF-8\">"+
-                        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"+
-                        "<title>WifiMapper</title>"+
-                        "<script src=\""+jquery+"\"></script>"+
-                        "<script src=\""+dataTableJs+"\"></script> "+
-                        "<link rel=\"stylesheet\" type=\"text/css\" href=\""+wifimapperCss+"\">"+
-                        "<link rel=\"stylesheet\" type=\"text/css\" href=\""+dataTableCss+"\">"+
-                        "<link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>"+
-                        "</head> ";
+        HashMap<String, Object> scopes = new HashMap<String, Object>();
+        scopes.put("jquery", jquery);
+        scopes.put("wifimapperCss", wifimapperCss);
+        scopes.put("wifiMapperJs", wifiMapperJs);
 
-        String header = "<header class=\"header-login-signup\">\n" +
-                "\n" +
-                "\t<div class=\"header-limiter\">\n" +
-                "\n" +
-                "\t\t<h1><a href=\"#\">UCT<span>Wifi Mapper</span></a></h1>\n" +
-                "\n" +
-                "\t\t<nav>\n" +
-                "\t\t\t<a href=\"#\" class=\"selected\">Dashboard</a>\n" +
-                "\t\t\t<a href=\""+map+"\">Map</a>\n" +
-                "\t\t</nav>\n" +
-                "\n" +
-                "\t\t<ul>\n" +
-                "\t\t\t<li><a href=\""+login+"\">Login</a></li>\n" +
-                "\t\t</ul>\n" +
-                "\n" +
-                "\t</div>\n" +
-                "\n" +
-                "</header>";
-        String body = "<body>"+header+"<div><table id=\"my-final-table\">\n" +
-                "  <thead>\n" +
-                "    <th>Name</th>\n" +
-                "    <th>Bssid</th>\n" +
-                "    <th>ssid</th>\n" +
-                "    <th>Latitude</th>\n" +
-                "    <th>Longitude</th>\n" +
-                "    <th>Speed</th>\n" +
-                "  </thead>\n" +
-                "  <tbody>\n" +
-                "  </tbody>\n" +
-                "</table>\n</div></body>";
-        String footer =
-                "<script src=\""+wifiMapperJs+"\"></script>"+
-                "</html>";
+        StringWriter writer = new StringWriter();
+        MustacheFactory mf = new DefaultMustacheFactory();
+        Mustache mustache = mf.compile("admin/index.html");
+        mustache.execute(writer, scopes);
+        writer.flush();
+        String response = writer.toString();
 
-        String response = head+body+footer;
         sendResponse(exchange, "text/html", 200, response);
     }
 
@@ -204,7 +173,7 @@ public class WifiMapperRouter {
         String response = "";
         String rootFolder = Paths.get(".").toAbsolutePath().normalize().toString(); //..wifimapper/backend
 
-        String address =  exchange.getRequestURI().toString(); //"http://"+exchange.getLocalAddress().getHostName() +":"+ exchange.getLocalAddress().getPort()+exchange.getRequestURI();
+        String address =  exchange.getRequestURI().toString();
         System.out.println("Received "+address+" @ "+LocalDate.now());
 
         try {
