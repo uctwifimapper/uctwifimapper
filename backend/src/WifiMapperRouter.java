@@ -73,7 +73,7 @@ public class WifiMapperRouter {
                 if(2 == query.length) {
 
                     Map<String, List> map = new HashMap<>();
-                    map.put("data",accessPointDao.get(query[0], query[1]));
+                    map.put("data",accessPointDao.get(query));
 
                     System.out.println("Map: "+new Gson().toJson(map));
 
@@ -119,6 +119,63 @@ public class WifiMapperRouter {
             default:
                 sendResponse(exchange, "application/json", 400, new Gson().toJson("{\"generic\":\"error\"}"));
                 break;
+        }
+    }
+
+    public static void strengthRequest(HttpExchange exchange) {
+
+        SignalStrengthDao signalStrengthDao;
+
+        switch (exchange.getRequestMethod()) {
+
+            case "GET":
+                String [] query = exchange.getRequestURI().getQuery().split("=", 0); //Process request payload
+
+                signalStrengthDao = new SignalStrengthDao();
+
+                String jsonResponse = "{\"generic\" : \"error\"}";
+
+                Map<String, List> map = new HashMap<>();
+                map.put("data",signalStrengthDao.get(query));
+
+                System.out.println("Map: "+new Gson().toJson(map));
+
+                jsonResponse = new Gson().toJson(map);
+
+                System.out.println(jsonResponse);
+                sendResponse(exchange, "application/json", 200, jsonResponse); //send response to client
+                break;
+            case "POST":
+                StringBuilder body = new StringBuilder();
+                InputStreamReader reader;
+
+                try {
+                    reader = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8.name());
+                    char[] buffer = new char[256];
+                    int read;
+                    try {
+                        while ((read = reader.read(buffer)) != -1) {
+                            body.append(buffer, 0, read);
+                        }
+                        reader.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+
+                signalStrengthDao = new SignalStrengthDao();
+
+                if (signalStrengthDao.save(new Gson().fromJson(body.toString(), SignalStrength.class))) {
+                    sendResponse(exchange, "application/json", 200, "{\"generic\":\"success\"}");
+                } else {
+                    sendResponse(exchange, "application/json", 400, new Gson().toJson("{\"generic\":\"error\"}"));
+                }
+                break;
+            default:
+                break;
+
         }
     }
 

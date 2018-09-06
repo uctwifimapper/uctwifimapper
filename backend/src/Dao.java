@@ -16,7 +16,7 @@ import java.util.Optional;
 * */
 public interface Dao<T> {
 
-    List<T> get(String column, String value);
+    List<T> get(String [] query);
 
     List<T> getAll();
 
