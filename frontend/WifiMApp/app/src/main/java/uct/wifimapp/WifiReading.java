@@ -28,6 +28,8 @@ public class WifiReading {
         this.latitude = _latitude;
         this.longitude = _longitude;
         this.strength = _strength;
+        this.location = new Location(_latitude, _longitude);
+        this.bssid = "";
     }
 
     public WifiReading(String bssid, double _latitude, double _longitude, int _strength, long timestamp){
@@ -104,7 +106,7 @@ public class WifiReading {
         return "WifiReading{" +
                 "bssid='" + bssid + '\'' +
                 ", strength=" + strength +
-                ", location=" + location +
+                ", location=" + location.toString() +
                 ", timestamp=" + timestamp +
                 ", latitude=" + latitude +
                 ", longitude=" + longitude +

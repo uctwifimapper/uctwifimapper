@@ -15,7 +15,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
     */
 public class WifiMapController {
 
-    Retrofit retrofit = null;
+    private Retrofit retrofit = null;
 
     private static WifiMapController instance;
     private static WifiMapService wifiMapService;
