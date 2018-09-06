@@ -24,12 +24,13 @@ public class WifiReading {
 
     public WifiReading() { }
 
-    public WifiReading(double _latitude, double _longitude, int _strength){
-        this.latitude = _latitude;
-        this.longitude = _longitude;
-        this.strength = _strength;
-        this.location = new Location(_latitude, _longitude);
-        this.bssid = "";
+    public WifiReading(String bssid, int strength, Location location, long timestamp) {
+        this.bssid = bssid;
+        this.strength = strength;
+        this.location = location;
+        this.timestamp = timestamp;
+        this.latitude = this.location.getLatitude();
+        this.longitude = this.location.getLongitude();
     }
 
     public WifiReading(String bssid, double _latitude, double _longitude, int _strength, long timestamp){

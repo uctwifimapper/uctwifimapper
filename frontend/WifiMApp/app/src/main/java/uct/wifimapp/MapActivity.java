@@ -88,7 +88,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         wifiReadingManager = new WifiReadingManager(mapStartLatLng.latitude, mapStartLatLng.longitude, zoneSize, numZonesX, numZonesY);
-        populateRandomReadings();
+
         attemptBroadcastWifiReading();
     }
 
@@ -155,6 +155,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         } else {
             drawMapGrid(wifiReadingManager.getAverageZoneSignalLevels());
         }
+        refreshMap();
     }
 
     // Attempt to send a wifi reading to the server. If permission is granted, sendWifiReadingToServer is called.
@@ -178,7 +179,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         }
     }
 
-    /* TESTED WORKING */
+    /* Send rsignal strength readings to server*/
     private void sendWifiReadingToServer(WifiReading wifiReading){
 
         Call<GenericResponse> call = WifiMapController.getInstance().postWifiStrength(wifiReading);
@@ -297,13 +298,13 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             int str = rand.nextInt(5);
             WifiReading reading = new WifiReading("d4:6e:0e:ed:fd:f9",lat, lng, str, 0);
             wifiReadingManager.addWifiReading(reading);
-            //sendWifiReadingToServer(reading);
+            //sendWifiReadingToServer(reading); //for testing
         }
     }
 
     // Refresh the map in order to display up-to-date reading data from the server.
     private void refreshMap(){
-        //map.clear();
+        map.clear();
         wifiReadingManager = new WifiReadingManager(mapStartLatLng.latitude, mapStartLatLng.longitude, zoneSize, numZonesX, numZonesY);
 
         Map<String,String> payload = new HashMap<>();
@@ -313,15 +314,14 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
 
             @Override
             public void onResponse(Call<List<WifiReading>> call, Response<List<WifiReading>> response) {
-
                 Log.d(this.getClass().getSimpleName(), response.code()+" "+response.body().size());
 
                 if(response.isSuccessful()){
+
                     for(WifiReading wifiReading : response.body()){
                         wifiReading.setLatitude(wifiReading.getLocation().getLatitude());
                         wifiReading.setLongitude(wifiReading.getLocation().getLongitude());
                         wifiReadingManager.addWifiReading(wifiReading);
-                        Log.d(this.getClass().getSimpleName(), wifiReading.toString());
                     }
 
                     if (USE_SIGNAL_PREDICTION) {
@@ -334,7 +334,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
 
             @Override
             public void onFailure(Call<List<WifiReading>> call, Throwable t) {
-                Log.e(this.getClass().getSimpleName(), "", t);
+                t.printStackTrace();
             }
         });
     }
