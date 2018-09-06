@@ -130,9 +130,9 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         map = googleMap;
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(UCT.getCenter(), 18));
         map.getUiSettings().setZoomControlsEnabled(true);
-        map.getUiSettings().setRotateGesturesEnabled(false);
-        map.getUiSettings().setScrollGesturesEnabled(false);
-        map.getUiSettings().setTiltGesturesEnabled(false);
+        map.getUiSettings().setRotateGesturesEnabled(true);
+        map.getUiSettings().setScrollGesturesEnabled(true);
+        map.getUiSettings().setTiltGesturesEnabled(true);
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
