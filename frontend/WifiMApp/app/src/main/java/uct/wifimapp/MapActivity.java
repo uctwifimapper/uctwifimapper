@@ -65,9 +65,10 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     private int numZonesX = 32;
     private int numZonesY = 32;
 
-    private LatLngBounds UCT = new LatLngBounds( // Map bounds based on grid.
+    private LatLngBounds mapBounds = new LatLngBounds( // Map bounds based on grid.
             mapStartLatLng, new LatLng(mapStartLatLng.latitude + zoneSize * numZonesY, mapStartLatLng.longitude + zoneSize * numZonesX));
 
+    private static final boolean USE_SIGNAL_PREDICTION = true;
     private static final int COLOR_RED_ARGB = 0x20ff0000;
     private static final int COLOR_YELLOW_ARGB = 0x20ffff00;
     private static final int COLOR_GREEN_ARGB = 0x2000ff00;
@@ -140,7 +141,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(UCT.getCenter(), 16));
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(mapBounds.getCenter(), 16));
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -150,8 +151,13 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
                     LOCATION_REQUEST_PERMISSION);
         }
-        //drawMapGrid(wifiReadingManager.getAverageZoneSignalLevels());
-        drawMapGrid(wifiReadingManager.getPredictiveAverageZoneSignalLevels());
+
+        if (USE_SIGNAL_PREDICTION) {
+            drawMapGrid(wifiReadingManager.getPredictiveAverageZoneSignalLevels());
+        } else {
+            drawMapGrid(wifiReadingManager.getAverageZoneSignalLevels());
+        }
+
     }
 
     // Attempt to send a wifi reading to the server. If permission is granted, sendWifiReadingToServer is called.
@@ -297,6 +303,20 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             int str = rand.nextInt(5);
             WifiReading reading = new WifiReading(lat, lng, str);
             wifiReadingManager.addWifiReading(reading);
+        }
+    }
+
+    // Refresh the map in order to display up-to-date reading data from the server.
+    private void refreshMap(){
+        map.clear();
+        wifiReadingManager = new WifiReadingManager(mapStartLatLng.latitude, mapStartLatLng.longitude, zoneSize, numZonesX, numZonesY);
+
+        // TODO get readings from server
+
+        if (USE_SIGNAL_PREDICTION) {
+            drawMapGrid(wifiReadingManager.getPredictiveAverageZoneSignalLevels());
+        } else {
+            drawMapGrid(wifiReadingManager.getAverageZoneSignalLevels());
         }
     }
 }

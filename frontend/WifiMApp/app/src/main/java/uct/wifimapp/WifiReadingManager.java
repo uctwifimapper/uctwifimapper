@@ -88,13 +88,6 @@ public class WifiReadingManager {
                             newAverages[x][y] = Math.max(newAverages[x][y], zoneAverages[x + 1][y]);
                         }
 
-                        // Signal drop-off
-                       /* if (newAverages[x][y] >= 2) {
-                            newAverages[x][y] -= 2;
-                        } else {
-                            newAverages[x][y] = -1;
-                        }*/
-
                         if (newAverages[x][y] >= 0) {
                             newAverages[x][y] -= 1;
                         }
