@@ -57,6 +57,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     /*private LatLngBounds UCT = new LatLngBounds(
             new LatLng(-33.9619445, 18.4592913), new LatLng(-33.9508155, 18.4648683)); //set bounds for map*/
     private int LOCATION_REQUEST_PERMISSION = 1001;
+    private int WIFI_STATE_REQUEST_PERMISSION = 1002;
     private WifiMapController wifiMapController;
     private WifiInfo wifiInfo;
 
@@ -65,16 +66,15 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     private int numZonesX = 32;
     private int numZonesY = 32;
 
-    private LatLngBounds UCT = new LatLngBounds( // Map bounds based on grid.
+    private LatLngBounds mapBounds = new LatLngBounds( // Map bounds based on grid.
             mapStartLatLng, new LatLng(mapStartLatLng.latitude + zoneSize * numZonesY, mapStartLatLng.longitude + zoneSize * numZonesX));
 
-    private static final int COLOR_BLACK_ARGB = 0x20ff0000;
-    private static final int COLOR_GREY_ARGB = 0x20878787;
-    private static final int COLOR_RED_ARGB = 0x20af001a;
-    private static final int COLOR_ORANGE_ARGB = 0x20d85d00;
-    private static final int COLOR_YELLOW_ARGB = 0x20ffd711;
-    private static final int COLOR_GREEN_ARGB = 0x2047b200;
-    private static final int COLOR_BLUE_ARGB = 0x2000bca0;
+    private static final boolean USE_SIGNAL_PREDICTION = true;
+    private static final int COLOR_RED_ARGB = 0x20ff0000;
+    private static final int COLOR_YELLOW_ARGB = 0x20ffff00;
+    private static final int COLOR_GREEN_ARGB = 0x2000ff00;
+    private static final int COLOR_CYAN_ARGB = 0x2000ffff;
+    private static final int COLOR_BLUE_ARGB = 0x200000ff;
     private static final int POLYGON_STROKE_WIDTH_PX = 2;
 
     @Override
@@ -121,6 +121,13 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                     return;
                 }
                 break;
+            case 1002:
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                }else {
+                    return;
+                }
+                break;
             default: break;
         }
     }
@@ -128,6 +135,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
+
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(UCT.getCenter(), 18));
         map.getUiSettings().setZoomControlsEnabled(true);
         map.getUiSettings().setRotateGesturesEnabled(true);
@@ -142,7 +150,13 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
                     LOCATION_REQUEST_PERMISSION);
         }
-        drawMapGrid(wifiReadingManager.getAverageZoneSignalLevels());
+
+        if (USE_SIGNAL_PREDICTION) {
+            drawMapGrid(wifiReadingManager.getPredictiveAverageZoneSignalLevels());
+        } else {
+            drawMapGrid(wifiReadingManager.getAverageZoneSignalLevels());
+        }
+
     }
 
     // Attempt to send a wifi reading to the server. If permission is granted, sendWifiReadingToServer is called.
@@ -186,7 +200,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     private void sendWifiReadingToServer(LatLng location, int signalStrength){
     }
 
-    // Return current wifi signal strength level (0-4).
+    // Return current wifi signal strength level (0-4, or -1 if permission not granted).
     private int getCurrentWifiSignalLevel(){
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_WIFI_STATE)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -197,6 +211,9 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             int level = WifiManager.calculateSignalLevel(wifiInfo.getRssi(), numberOfLevels);
             return level;
         } else {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.ACCESS_WIFI_STATE},
+                    WIFI_STATE_REQUEST_PERMISSION);
             return -1;
         }
     }
@@ -226,6 +243,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         });
     }
 
+    // Draw polygons to the map depicting wifi signal zones.
     private void drawMapGrid(int[][] signalLevels){
         for (int x = 0; x < numZonesX; x++) {
             for (int y = 0; y < numZonesY; y++) {
@@ -243,25 +261,26 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         }
     }
 
+    // Apply colours etc to map grid squares.
     private void stylePolygon(Polygon polygon){
         String type = "";
         if (polygon.getTag() != null){
             type = polygon.getTag().toString();
         }
         int strokeColor = 0;
-        int fillColor = COLOR_GREY_ARGB;
+        int fillColor = 0;
         switch (type){
             case "-1": fillColor = 0;
                 break;
-            case "0": fillColor = COLOR_RED_ARGB;
+            case "0": fillColor = COLOR_BLUE_ARGB;
                 break;
-            case "1": fillColor = COLOR_ORANGE_ARGB;
+            case "1": fillColor = COLOR_CYAN_ARGB;
                 break;
-            case "2": fillColor = COLOR_YELLOW_ARGB;
+            case "2": fillColor = COLOR_GREEN_ARGB;
                 break;
-            case "3": fillColor = COLOR_GREEN_ARGB;
+            case "3": fillColor = COLOR_YELLOW_ARGB;
                 break;
-            case "4": fillColor = COLOR_BLUE_ARGB;
+            case "4": fillColor = COLOR_RED_ARGB;
                 break;
             default:
                 break;
@@ -271,14 +290,29 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         polygon.setFillColor(fillColor);
     }
 
+    // Fill the map with random readings (for testing).
     private void populateRandomReadings(){
         Random rand = new Random();
-        for (int i = 0; i < 300; i++){
+        for (int i = 0; i < 100; i++){
             double lat = mapStartLatLng.latitude + rand.nextDouble() * (numZonesY * zoneSize);
             double lng = mapStartLatLng.longitude + rand.nextDouble() * (numZonesX * zoneSize);
             int str = rand.nextInt(5);
             WifiReading reading = new WifiReading(lat, lng, str);
             wifiReadingManager.addWifiReading(reading);
+        }
+    }
+
+    // Refresh the map in order to display up-to-date reading data from the server.
+    private void refreshMap(){
+        map.clear();
+        wifiReadingManager = new WifiReadingManager(mapStartLatLng.latitude, mapStartLatLng.longitude, zoneSize, numZonesX, numZonesY);
+
+        // TODO get readings from server
+
+        if (USE_SIGNAL_PREDICTION) {
+            drawMapGrid(wifiReadingManager.getPredictiveAverageZoneSignalLevels());
+        } else {
+            drawMapGrid(wifiReadingManager.getAverageZoneSignalLevels());
         }
     }
 }
