@@ -60,4 +60,43 @@ public class WifiReadingManager {
         }
         return zoneAverages;
     }
+
+    public int[][] getPredictiveAverageZoneSignalLevels(){
+        int[][] realAverages = getAverageZoneSignalLevels(); // To track which readings are real vs predicted.
+        int[][] zoneAverages = getAverageZoneSignalLevels();
+        int[][] newAverages = getAverageZoneSignalLevels(); // Need to exclude new zone changes when comparing.
+        int gridJumps = 4;
+
+        for (int i = 0; i < gridJumps; i++) {
+            for (int x = 0; x < numZonesX; x++) {
+                for (int y = 0; y < numZonesY; y++) {
+                    if (realAverages[x][y] == -1) {
+                        // Above
+                        if (y < numZonesY - 1) {
+                            newAverages[x][y] = Math.max(newAverages[x][y], zoneAverages[x][y + 1]);
+                        }
+                        // Below
+                        if (y > 0) {
+                            newAverages[x][y] = Math.max(newAverages[x][y], zoneAverages[x][y - 1]);
+                        }
+                        // Left
+                        if (x > 0) {
+                            newAverages[x][y] = Math.max(newAverages[x][y], zoneAverages[x - 1][y]);
+                        }
+                        // Right
+                        if (x < numZonesX - 1) {
+                            newAverages[x][y] = Math.max(newAverages[x][y], zoneAverages[x + 1][y]);
+                        }
+
+                        if (newAverages[x][y] >= 0) {
+                            newAverages[x][y] -= 1;
+                        }
+                    }
+                }
+            }
+            zoneAverages = newAverages;
+        }
+
+        return zoneAverages;
+    }
 }

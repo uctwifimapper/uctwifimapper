@@ -23,6 +23,10 @@ public class AccessPointDao implements Dao<AccessPoint> {
         connection = Database.getConnection();
     }
 
+    public List<AccessPoint> get(String [] query) {
+        return this.get(query[0], query[1]);
+    }
+
     /*
     * Get list of access points according to query passed
     * 1. Perform sql SELECT query
@@ -33,8 +37,7 @@ public class AccessPointDao implements Dao<AccessPoint> {
     * Value - The data that's being looked up in the database column.
     * return - list of access point(s)
     * */
-    @Override
-    public List<AccessPoint> get(String column, String value) {
+    private List<AccessPoint> get(String column, String value) {
 
         String query = "";
         List<AccessPoint> apnList = new ArrayList<>();
@@ -62,7 +65,7 @@ public class AccessPointDao implements Dao<AccessPoint> {
 
                     String [] coordinates = value.split(";",2);
 
-                    if(2 == coordinates.length){ //TODO improve query
+                    if(2 == coordinates.length){
                         query = "SELECT * FROM access_point ORDER BY location <-> " +
                                 "POINT("+Double.parseDouble(coordinates[0])+","+Double.parseDouble(coordinates[1])+")::point LIMIT 1";
                     }
@@ -88,9 +91,10 @@ public class AccessPointDao implements Dao<AccessPoint> {
                 while (resultSet.next()) {
 
                     AccessPoint apn = new AccessPoint();
-                    apn.setBssid(resultSet.getString("bssid"));
+                    apn.setBssid(resultSet.getString("bssid")!=null?resultSet.getString("bssid"):"");
                     apn.setLinkSpeed(resultSet.getInt("linkSpeed"));
-                    apn.setSsid(resultSet.getString("ssid"));
+                    apn.setSsid(resultSet.getString("ssid")!=null?resultSet.getString("ssid"):"");
+                    apn.setTimestamp(resultSet.getLong("timestamp"));
 
                     if (resultSet.getString("location") != null) {
                         apn.setLocation(new PGpoint(resultSet.getString("location")));
@@ -127,11 +131,12 @@ public class AccessPointDao implements Dao<AccessPoint> {
             pGobject.setValue(accessPoint.getBssid());
             pGobject.setType("macaddr");
 
-            PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO access_point VALUES (?,?,?,?)");
+            PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO access_point VALUES (?,?,?,?,?)");
             preparedStatement.setObject(1, pGobject);
             preparedStatement.setString(2, accessPoint.getSsid());
             preparedStatement.setObject(3, accessPoint.getLocation());
             preparedStatement.setInt(4, accessPoint.getLinkSpeed());
+            preparedStatement.setLong(5, System.currentTimeMillis());
 
             int response = preparedStatement.executeUpdate();
             preparedStatement.close();

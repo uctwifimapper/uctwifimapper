@@ -15,7 +15,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
     */
 public class WifiMapController {
 
-    Retrofit retrofit = null;
+    private Retrofit retrofit = null;
 
     private static WifiMapController instance;
     private static WifiMapService wifiMapService;
@@ -47,6 +47,16 @@ public class WifiMapController {
 
     public Call<GenericResponse> postApn(ApnPayload payload) {
         Call<GenericResponse> call = wifiMapService.postApn(payload);
+        return call;
+    }
+
+    public Call<List<WifiReading>> getWifiStrength(Map<String,String> query) {
+        Call<List<WifiReading>> call = wifiMapService.getSignalStregth(query);
+        return call;
+    }
+
+    public Call<GenericResponse> postWifiStrength(WifiReading payload) {
+        Call<GenericResponse> call = wifiMapService.postSignalStrength(payload);
         return call;
     }
 }

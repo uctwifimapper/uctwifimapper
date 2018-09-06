@@ -3,7 +3,6 @@ package uct.wifimapp;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.wifi.WifiInfo;
@@ -57,23 +56,24 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     /*private LatLngBounds UCT = new LatLngBounds(
             new LatLng(-33.9619445, 18.4592913), new LatLng(-33.9508155, 18.4648683)); //set bounds for map*/
     private int LOCATION_REQUEST_PERMISSION = 1001;
+    private int WIFI_STATE_REQUEST_PERMISSION = 1002;
     private WifiMapController wifiMapController;
+    private WifiInfo wifiInfo;
 
     private LatLng mapStartLatLng = new LatLng(-33.960848, 18.456848); // Bottom-left corner of map area.
     private double zoneSize = 0.0002000; // Size of grid squares in DD coords.
     private int numZonesX = 32;
     private int numZonesY = 32;
 
-    private LatLngBounds UCT = new LatLngBounds( // Map bounds based on grid.
+    private LatLngBounds mapBounds = new LatLngBounds( // Map bounds based on grid.
             mapStartLatLng, new LatLng(mapStartLatLng.latitude + zoneSize * numZonesY, mapStartLatLng.longitude + zoneSize * numZonesX));
 
-    private static final int COLOR_BLACK_ARGB = 0x20ff0000;
-    private static final int COLOR_GREY_ARGB = 0x20878787;
-    private static final int COLOR_RED_ARGB = 0x20af001a;
-    private static final int COLOR_ORANGE_ARGB = 0x20d85d00;
-    private static final int COLOR_YELLOW_ARGB = 0x20ffd711;
-    private static final int COLOR_GREEN_ARGB = 0x2047b200;
-    private static final int COLOR_BLUE_ARGB = 0x2000bca0;
+    private static final boolean USE_SIGNAL_PREDICTION = true;
+    private static final int COLOR_RED_ARGB = 0x20ff0000;
+    private static final int COLOR_YELLOW_ARGB = 0x20ffff00;
+    private static final int COLOR_GREEN_ARGB = 0x2000ff00;
+    private static final int COLOR_CYAN_ARGB = 0x2000ffff;
+    private static final int COLOR_BLUE_ARGB = 0x200000ff;
     private static final int POLYGON_STROKE_WIDTH_PX = 2;
 
     @Override
@@ -88,15 +88,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         wifiReadingManager = new WifiReadingManager(mapStartLatLng.latitude, mapStartLatLng.longitude, zoneSize, numZonesX, numZonesY);
-        populateRandomReadings();
 
-        SharedPreferences settings = getSharedPreferences("settings.txt", MODE_PRIVATE);
-        settings.edit().putBoolean("today", false);
-        settings.edit().putBoolean("upload", false);
-        settings.edit().putInt("min", 5);
-        settings.edit().apply();
-
-        getWifiLocations();
+        attemptBroadcastWifiReading();
     }
 
     @Override
@@ -127,6 +120,13 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                     return;
                 }
                 break;
+            case 1002:
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                }else {
+                    return;
+                }
+                break;
             default: break;
         }
     }
@@ -134,7 +134,12 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(UCT.getCenter(), 16));
+
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(mapBounds.getCenter(), 18));
+        map.getUiSettings().setZoomControlsEnabled(true);
+        map.getUiSettings().setRotateGesturesEnabled(true);
+        map.getUiSettings().setScrollGesturesEnabled(true);
+        map.getUiSettings().setTiltGesturesEnabled(true);
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -144,7 +149,13 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
                     LOCATION_REQUEST_PERMISSION);
         }
-        drawMapGrid(wifiReadingManager.getAverageZoneSignalLevels());
+
+        if (USE_SIGNAL_PREDICTION) {
+            drawMapGrid(wifiReadingManager.getPredictiveAverageZoneSignalLevels());
+        } else {
+            drawMapGrid(wifiReadingManager.getAverageZoneSignalLevels());
+        }
+        refreshMap();
     }
 
     // Attempt to send a wifi reading to the server. If permission is granted, sendWifiReadingToServer is called.
@@ -156,9 +167,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                         @Override
                         public void onSuccess(Location location) {
                             if (location != null) {
-                                LatLng currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
                                 int signalStrength = getCurrentWifiSignalLevel();
-                                sendWifiReadingToServer(currentLocation, signalStrength);
+                                sendWifiReadingToServer(new WifiReading(wifiInfo.getBSSID(), location.getLatitude(), location.getLongitude(), signalStrength, System.currentTimeMillis() ));
                             }
                         }
                     });
@@ -169,61 +179,61 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         }
     }
 
+    /* Send rsignal strength readings to server*/
+    private void sendWifiReadingToServer(WifiReading wifiReading){
+
+        Call<GenericResponse> call = WifiMapController.getInstance().postWifiStrength(wifiReading);
+        call.enqueue(new Callback<GenericResponse>(){
+
+            @Override
+            public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+
+            }
+
+            @Override
+            public void onFailure(Call<GenericResponse> call, Throwable t) {
+
+            }
+        });
+    }
     // Uploads a new wifi signal reading at the user's location to the server.
     private void sendWifiReadingToServer(LatLng location, int signalStrength){
-        // TODO
     }
 
-    // Return current wifi signal strength level (0-4).
+    // Return current wifi signal strength level (0-4, or -1 if permission not granted).
     private int getCurrentWifiSignalLevel(){
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_WIFI_STATE)
                 == PackageManager.PERMISSION_GRANTED) {
             WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+            wifiInfo = wifiManager.getConnectionInfo();
+
             int numberOfLevels = 5;
             int level = WifiManager.calculateSignalLevel(wifiInfo.getRssi(), numberOfLevels);
             return level;
         } else {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.ACCESS_WIFI_STATE},
+                    WIFI_STATE_REQUEST_PERMISSION);
             return -1;
         }
     }
 
     /*
-    * Request data from backend using retrofit
+    * Request data from backend using retrofit TESTED - WORKING
     * */
     private void getWifiLocations(){
 
         Map<String,String> payload = new HashMap<String, String>();
         payload.put("ssid", "eduroam");
-        Call<List<AccessPoint>> call = wifiMapController.getInstance().getApn(payload);
-        Log.d("MapActivity - payload", payload.toString());
+        Call<List<AccessPoint>> call = WifiMapController.getInstance().getApn(payload);
         call.enqueue(new Callback<List<AccessPoint>>(){
-            /**
-             * Invoked for a received HTTP response.
-             * <p>
-             * Note: An HTTP response may still indicate an application-level failure such as a 404 or 500.
-             * Call {@link Response#isSuccessful()} to determine if the response indicates success.
-             *
-             * @param call
-             * @param response
-             */
             @Override
             public void onResponse(Call<List<AccessPoint>> call, Response<List<AccessPoint>> response) {
 
                 if(response.isSuccessful()){
-                    for(AccessPoint accessPoint : response.body()) {
-                        //addWifiReading(accessPoint.location.getLatitude(), accessPoint.location.getLongitude(), (int)Math.floor(Math.random()*5));
-                    }
+
                 }
             }
-
-            /**
-             * Invoked when a network exception occurred talking to the server or when an unexpected
-             * exception occurred creating the request or processing the response.
-             *
-             * @param call
-             * @param t
-             */
             @Override
             public void onFailure(Call<List<AccessPoint>> call, Throwable t) {
 
@@ -231,6 +241,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         });
     }
 
+    // Draw polygons to the map depicting wifi signal zones.
     private void drawMapGrid(int[][] signalLevels){
         for (int x = 0; x < numZonesX; x++) {
             for (int y = 0; y < numZonesY; y++) {
@@ -248,25 +259,26 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         }
     }
 
+    // Apply colours etc to map grid squares.
     private void stylePolygon(Polygon polygon){
         String type = "";
         if (polygon.getTag() != null){
             type = polygon.getTag().toString();
         }
         int strokeColor = 0;
-        int fillColor = COLOR_GREY_ARGB;
+        int fillColor = 0;
         switch (type){
             case "-1": fillColor = 0;
                 break;
-            case "0": fillColor = COLOR_RED_ARGB;
+            case "0": fillColor = COLOR_BLUE_ARGB;
                 break;
-            case "1": fillColor = COLOR_ORANGE_ARGB;
+            case "1": fillColor = COLOR_CYAN_ARGB;
                 break;
-            case "2": fillColor = COLOR_YELLOW_ARGB;
+            case "2": fillColor = COLOR_GREEN_ARGB;
                 break;
-            case "3": fillColor = COLOR_GREEN_ARGB;
+            case "3": fillColor = COLOR_YELLOW_ARGB;
                 break;
-            case "4": fillColor = COLOR_BLUE_ARGB;
+            case "4": fillColor = COLOR_RED_ARGB;
                 break;
             default:
                 break;
@@ -276,14 +288,54 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         polygon.setFillColor(fillColor);
     }
 
+    // Fill the map with random readings (for testing).
     private void populateRandomReadings(){
+
         Random rand = new Random();
-        for (int i = 0; i < 300; i++){
+        for (int i = 0; i < 10; i++){
             double lat = mapStartLatLng.latitude + rand.nextDouble() * (numZonesY * zoneSize);
             double lng = mapStartLatLng.longitude + rand.nextDouble() * (numZonesX * zoneSize);
             int str = rand.nextInt(5);
-            WifiReading reading = new WifiReading(lat, lng, str);
+            WifiReading reading = new WifiReading("d4:6e:0e:ed:fd:f9",lat, lng, str, 0);
             wifiReadingManager.addWifiReading(reading);
+            //sendWifiReadingToServer(reading); //for testing
         }
+    }
+
+    // Refresh the map in order to display up-to-date reading data from the server.
+    private void refreshMap(){
+        map.clear();
+        wifiReadingManager = new WifiReadingManager(mapStartLatLng.latitude, mapStartLatLng.longitude, zoneSize, numZonesX, numZonesY);
+
+        Map<String,String> payload = new HashMap<>();
+        payload.put("timestamp", String.valueOf(System.currentTimeMillis()));
+        Call<List<WifiReading>> call = WifiMapController.getInstance().getWifiStrength(payload);
+        call.enqueue(new Callback<List<WifiReading>>(){
+
+            @Override
+            public void onResponse(Call<List<WifiReading>> call, Response<List<WifiReading>> response) {
+                Log.d(this.getClass().getSimpleName(), response.code()+" "+response.body().size());
+
+                if(response.isSuccessful()){
+
+                    for(WifiReading wifiReading : response.body()){
+                        wifiReading.setLatitude(wifiReading.getLocation().getLatitude());
+                        wifiReading.setLongitude(wifiReading.getLocation().getLongitude());
+                        wifiReadingManager.addWifiReading(wifiReading);
+                    }
+
+                    if (USE_SIGNAL_PREDICTION) {
+                        drawMapGrid(wifiReadingManager.getPredictiveAverageZoneSignalLevels());
+                    } else {
+                        drawMapGrid(wifiReadingManager.getAverageZoneSignalLevels());
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<WifiReading>> call, Throwable t) {
+                t.printStackTrace();
+            }
+        });
     }
 }

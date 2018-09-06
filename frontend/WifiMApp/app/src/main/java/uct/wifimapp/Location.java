@@ -12,6 +12,11 @@ public class Location {
     @SerializedName("y")
     private double longitude;
 
+    public Location(double latitude, double longitude) {
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+
     public double getLatitude() {
         return latitude;
     }
@@ -26,5 +31,13 @@ public class Location {
 
     public void setLongitude(double longitude) {
         this.longitude = longitude;
+    }
+
+    @Override
+    public String toString() {
+        return "Location{" +
+                "latitude=" + latitude +
+                ", longitude=" + longitude +
+                '}';
     }
 }

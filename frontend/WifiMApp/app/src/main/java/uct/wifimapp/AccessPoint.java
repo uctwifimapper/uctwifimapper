@@ -20,6 +20,8 @@ public class AccessPoint {
     public Location location;
     @SerializedName("linkSpeed")
     public int linkSpeed;
+    @SerializedName("timestamp")
+    private int timestamp;
 
     public String getBssid() {
         return bssid;
@@ -61,6 +63,14 @@ public class AccessPoint {
         this.linkSpeed = linkSpeed;
     }
 
+    public int getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(int timestamp) {
+        this.timestamp = timestamp;
+    }
+
     @Override
     public String toString() {
         return "AccessPoint{" +
@@ -69,6 +79,7 @@ public class AccessPoint {
                 ", ssid='" + ssid + '\'' +
                 ", location=" + location +
                 ", linkSpeed=" + linkSpeed +
+                ", timestamp=" + timestamp +
                 '}';
     }
 }

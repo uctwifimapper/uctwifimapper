@@ -22,4 +22,11 @@ public interface WifiMapService {
 
     @POST("apn")
     Call<GenericResponse> postApn(@Body ApnPayload apnPayload);
+
+    @GET("strength")
+    Call<List<WifiReading>> getSignalStregth(@QueryMap Map<String, String> query);
+
+    @POST("strength")
+    Call<GenericResponse> postSignalStrength(@Body WifiReading strengthPayload);
+
 }
