@@ -58,6 +58,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             new LatLng(-33.9619445, 18.4592913), new LatLng(-33.9508155, 18.4648683)); //set bounds for map*/
     private int LOCATION_REQUEST_PERMISSION = 1001;
     private WifiMapController wifiMapController;
+    private WifiInfo wifiInfo;
 
     private LatLng mapStartLatLng = new LatLng(-33.960848, 18.456848); // Bottom-left corner of map area.
     private double zoneSize = 0.0002000; // Size of grid squares in DD coords.
@@ -89,8 +90,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         wifiReadingManager = new WifiReadingManager(mapStartLatLng.latitude, mapStartLatLng.longitude, zoneSize, numZonesX, numZonesY);
         populateRandomReadings();
-
-        getWifiLocations();
+        attemptBroadcastWifiReading();
     }
 
     @Override
@@ -154,9 +154,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                         @Override
                         public void onSuccess(Location location) {
                             if (location != null) {
-                                LatLng currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
                                 int signalStrength = getCurrentWifiSignalLevel();
-                                sendWifiReadingToServer(currentLocation, signalStrength);
+                                sendWifiReadingToServer(new WifiReading(wifiInfo.getBSSID(), location.getLatitude(), location.getLongitude(), signalStrength, System.currentTimeMillis()/1000 ));
                             }
                         }
                     });
@@ -167,9 +166,24 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         }
     }
 
+    private void sendWifiReadingToServer(WifiReading wifiReading){
+
+        Call<GenericResponse> call = wifiMapController.getInstance().postWifiStrength(wifiReading);
+        call.enqueue(new Callback<GenericResponse>(){
+
+            @Override
+            public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+
+            }
+
+            @Override
+            public void onFailure(Call<GenericResponse> call, Throwable t) {
+
+            }
+        });
+    }
     // Uploads a new wifi signal reading at the user's location to the server.
     private void sendWifiReadingToServer(LatLng location, int signalStrength){
-        // TODO
     }
 
     // Return current wifi signal strength level (0-4).
@@ -177,7 +191,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_WIFI_STATE)
                 == PackageManager.PERMISSION_GRANTED) {
             WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+            wifiInfo = wifiManager.getConnectionInfo();
+
             int numberOfLevels = 5;
             int level = WifiManager.calculateSignalLevel(wifiInfo.getRssi(), numberOfLevels);
             return level;
@@ -194,34 +209,16 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         Map<String,String> payload = new HashMap<String, String>();
         payload.put("ssid", "eduroam");
         Call<List<AccessPoint>> call = wifiMapController.getInstance().getApn(payload);
-        Log.d("MapActivity - payload", payload.toString());
         call.enqueue(new Callback<List<AccessPoint>>(){
-            /**
-             * Invoked for a received HTTP response.
-             * <p>
-             * Note: An HTTP response may still indicate an application-level failure such as a 404 or 500.
-             * Call {@link Response#isSuccessful()} to determine if the response indicates success.
-             *
-             * @param call
-             * @param response
-             */
             @Override
             public void onResponse(Call<List<AccessPoint>> call, Response<List<AccessPoint>> response) {
 
                 if(response.isSuccessful()){
                     for(AccessPoint accessPoint : response.body()) {
-                        //addWifiReading(accessPoint.location.getLatitude(), accessPoint.location.getLongitude(), (int)Math.floor(Math.random()*5));
+                        //wifiReadingManager.addWifiReading();
                     }
                 }
             }
-
-            /**
-             * Invoked when a network exception occurred talking to the server or when an unexpected
-             * exception occurred creating the request or processing the response.
-             *
-             * @param call
-             * @param t
-             */
             @Override
             public void onFailure(Call<List<AccessPoint>> call, Throwable t) {
 
