@@ -134,13 +134,8 @@ public class WifiMapperRouter {
                 signalStrengthDao = new SignalStrengthDao();
 
                 String jsonResponse = "{\"generic\" : \"error\"}";
-
-                Map<String, List> map = new HashMap<>();
-                map.put("data",signalStrengthDao.get(query));
-
-                System.out.println("Map: "+new Gson().toJson(map));
-
-                jsonResponse = new Gson().toJson(map);
+                
+                jsonResponse = new Gson().toJson(signalStrengthDao.get(query));
 
                 System.out.println(jsonResponse);
                 sendResponse(exchange, "application/json", 200, jsonResponse); //send response to client
