@@ -49,4 +49,14 @@ public class WifiMapController {
         Call<GenericResponse> call = wifiMapService.postApn(payload);
         return call;
     }
+
+    public Call<List<WifiReading>> getWifiStrength(Map<String,String> query) {
+        Call<List<WifiReading>> call = wifiMapService.getSignalStregth(query);
+        return call;
+    }
+
+    public Call<GenericResponse> postWifiStrength(WifiReading payload) {
+        Call<GenericResponse> call = wifiMapService.postSignalStrength(payload);
+        return call;
+    }
 }
