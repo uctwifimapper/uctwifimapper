@@ -29,20 +29,23 @@ public class WifiMapperServer {
 
             HttpServer server = HttpServer.create(new InetSocketAddress(8800), 0);
 
-            HttpContext context = server.createContext("/");
-            context.setHandler(WifiMapperRouter::rootRequest);
+            HttpContext root = server.createContext("/");
+            root.setHandler(WifiMapperRouter::rootRequest);
 
-            HttpContext context2 = server.createContext("/apn");
-            context2.setHandler(WifiMapperRouter::apnRequest);
+            HttpContext apn = server.createContext("/apn");
+            apn.setHandler(WifiMapperRouter::apnRequest);
 
-            HttpContext context3 = server.createContext("/admin");
-            context3.setHandler(WifiMapperRouter::adminRequest);
+            HttpContext strength = server.createContext("/strength");
+            strength.setHandler(WifiMapperRouter::strengthRequest);
 
-            HttpContext context4 = server.createContext("/admin/map");
-            context4.setHandler(WifiMapperRouter::mapRequest);
+            HttpContext admin = server.createContext("/admin");
+            admin.setHandler(WifiMapperRouter::adminRequest);
 
-            HttpContext context5 = server.createContext("/admin/js");
-            context5.setHandler(WifiMapperRouter::resourceRequest);
+            HttpContext map = server.createContext("/admin/map");
+            map.setHandler(WifiMapperRouter::mapRequest);
+
+            HttpContext resources = server.createContext("/admin/js");
+            resources.setHandler(WifiMapperRouter::resourceRequest);
 
             server.start();
 

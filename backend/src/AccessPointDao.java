@@ -23,6 +23,10 @@ public class AccessPointDao implements Dao<AccessPoint> {
         connection = Database.getConnection();
     }
 
+    public List<AccessPoint> get(String [] query) {
+        return this.get(query[0], query[1]);
+    }
+
     /*
     * Get list of access points according to query passed
     * 1. Perform sql SELECT query
@@ -33,8 +37,7 @@ public class AccessPointDao implements Dao<AccessPoint> {
     * Value - The data that's being looked up in the database column.
     * return - list of access point(s)
     * */
-    @Override
-    public List<AccessPoint> get(String column, String value) {
+    private List<AccessPoint> get(String column, String value) {
 
         String query = "";
         List<AccessPoint> apnList = new ArrayList<>();
@@ -62,7 +65,7 @@ public class AccessPointDao implements Dao<AccessPoint> {
 
                     String [] coordinates = value.split(";",2);
 
-                    if(2 == coordinates.length){ //TODO improve query
+                    if(2 == coordinates.length){
                         query = "SELECT * FROM access_point ORDER BY location <-> " +
                                 "POINT("+Double.parseDouble(coordinates[0])+","+Double.parseDouble(coordinates[1])+")::point LIMIT 1";
                     }

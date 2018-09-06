@@ -14,6 +14,7 @@ public class AccessPoint {
     private String ssid; //Network identifier e.g eduroam
     private PGpoint location; //location of the router
     private int linkSpeed;
+    private int timestamp; //unix timestamp
 
     public String getName() {
         return name;
