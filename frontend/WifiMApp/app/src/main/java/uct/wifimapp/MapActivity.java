@@ -90,12 +90,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         wifiReadingManager = new WifiReadingManager(mapStartLatLng.latitude, mapStartLatLng.longitude, zoneSize, numZonesX, numZonesY);
         populateRandomReadings();
 
-        SharedPreferences settings = getSharedPreferences("settings.txt", MODE_PRIVATE);
-        settings.edit().putBoolean("today", false);
-        settings.edit().putBoolean("upload", false);
-        settings.edit().putInt("min", 5);
-        settings.edit().apply();
-
         getWifiLocations();
     }
 
@@ -134,7 +128,11 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(UCT.getCenter(), 16));
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(UCT.getCenter(), 18));
+        map.getUiSettings().setZoomControlsEnabled(true);
+        map.getUiSettings().setRotateGesturesEnabled(false);
+        map.getUiSettings().setScrollGesturesEnabled(false);
+        map.getUiSettings().setTiltGesturesEnabled(false);
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
