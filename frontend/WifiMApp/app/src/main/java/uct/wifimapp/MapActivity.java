@@ -3,7 +3,6 @@ package uct.wifimapp;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.wifi.WifiInfo;
@@ -156,7 +155,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         } else {
             drawMapGrid(wifiReadingManager.getAverageZoneSignalLevels());
         }
-
     }
 
     // Attempt to send a wifi reading to the server. If permission is granted, sendWifiReadingToServer is called.
@@ -169,7 +167,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                         public void onSuccess(Location location) {
                             if (location != null) {
                                 int signalStrength = getCurrentWifiSignalLevel();
-                                sendWifiReadingToServer(new WifiReading(wifiInfo.getBSSID(), location.getLatitude(), location.getLongitude(), signalStrength, System.currentTimeMillis()/1000 ));
+                                sendWifiReadingToServer(new WifiReading(wifiInfo.getBSSID(), location.getLatitude(), location.getLongitude(), signalStrength, System.currentTimeMillis() ));
                             }
                         }
                     });
@@ -180,9 +178,10 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         }
     }
 
+    /* TESTED WORKING */
     private void sendWifiReadingToServer(WifiReading wifiReading){
 
-        Call<GenericResponse> call = wifiMapController.getInstance().postWifiStrength(wifiReading);
+        Call<GenericResponse> call = WifiMapController.getInstance().postWifiStrength(wifiReading);
         call.enqueue(new Callback<GenericResponse>(){
 
             @Override
@@ -219,21 +218,19 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     }
 
     /*
-    * Request data from backend using retrofit
+    * Request data from backend using retrofit TESTED - WORKING
     * */
     private void getWifiLocations(){
 
         Map<String,String> payload = new HashMap<String, String>();
         payload.put("ssid", "eduroam");
-        Call<List<AccessPoint>> call = wifiMapController.getInstance().getApn(payload);
+        Call<List<AccessPoint>> call = WifiMapController.getInstance().getApn(payload);
         call.enqueue(new Callback<List<AccessPoint>>(){
             @Override
             public void onResponse(Call<List<AccessPoint>> call, Response<List<AccessPoint>> response) {
 
                 if(response.isSuccessful()){
-                    for(AccessPoint accessPoint : response.body()) {
-                        //wifiReadingManager.addWifiReading();
-                    }
+
                 }
             }
             @Override
@@ -292,27 +289,53 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
 
     // Fill the map with random readings (for testing).
     private void populateRandomReadings(){
+
         Random rand = new Random();
-        for (int i = 0; i < 100; i++){
+        for (int i = 0; i < 10; i++){
             double lat = mapStartLatLng.latitude + rand.nextDouble() * (numZonesY * zoneSize);
             double lng = mapStartLatLng.longitude + rand.nextDouble() * (numZonesX * zoneSize);
             int str = rand.nextInt(5);
-            WifiReading reading = new WifiReading(lat, lng, str);
+            WifiReading reading = new WifiReading("d4:6e:0e:ed:fd:f9",lat, lng, str, 0);
             wifiReadingManager.addWifiReading(reading);
+            //sendWifiReadingToServer(reading);
         }
     }
 
     // Refresh the map in order to display up-to-date reading data from the server.
     private void refreshMap(){
-        map.clear();
+        //map.clear();
         wifiReadingManager = new WifiReadingManager(mapStartLatLng.latitude, mapStartLatLng.longitude, zoneSize, numZonesX, numZonesY);
 
-        // TODO get readings from server
+        Map<String,String> payload = new HashMap<>();
+        payload.put("timestamp", String.valueOf(System.currentTimeMillis()));
+        Call<List<WifiReading>> call = WifiMapController.getInstance().getWifiStrength(payload);
+        call.enqueue(new Callback<List<WifiReading>>(){
 
-        if (USE_SIGNAL_PREDICTION) {
-            drawMapGrid(wifiReadingManager.getPredictiveAverageZoneSignalLevels());
-        } else {
-            drawMapGrid(wifiReadingManager.getAverageZoneSignalLevels());
-        }
+            @Override
+            public void onResponse(Call<List<WifiReading>> call, Response<List<WifiReading>> response) {
+
+                Log.d(this.getClass().getSimpleName(), response.code()+" "+response.body().size());
+
+                if(response.isSuccessful()){
+                    for(WifiReading wifiReading : response.body()){
+                        wifiReading.setLatitude(wifiReading.getLocation().getLatitude());
+                        wifiReading.setLongitude(wifiReading.getLocation().getLongitude());
+                        wifiReadingManager.addWifiReading(wifiReading);
+                        Log.d(this.getClass().getSimpleName(), wifiReading.toString());
+                    }
+
+                    if (USE_SIGNAL_PREDICTION) {
+                        drawMapGrid(wifiReadingManager.getPredictiveAverageZoneSignalLevels());
+                    } else {
+                        drawMapGrid(wifiReadingManager.getAverageZoneSignalLevels());
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<WifiReading>> call, Throwable t) {
+                Log.e(this.getClass().getSimpleName(), "", t);
+            }
+        });
     }
 }
