@@ -4,7 +4,9 @@ import org.postgresql.util.PGobject;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SignalStrengthDao implements Dao<SignalStrength> {
 
@@ -144,5 +146,46 @@ public class SignalStrengthDao implements Dao<SignalStrength> {
     @Override
     public void delete(SignalStrength signalStrength) {
 
+    }
+
+    public List getAvgSgtrenth(){
+
+        List<DataHolder> list= new ArrayList<>();
+
+        try(Statement statement = connection.createStatement()) {
+
+            try (ResultSet resultSet = statement.executeQuery("SELECT signal_strength.bssid, AVG(signal_strength.\"signalStrength\") FROM public.signal_strength GROUP BY signal_strength.bssid ")) {
+
+                while (resultSet.next()) {
+                    DataHolder<Double> dataHolder = new DataHolder<>();
+                    dataHolder.setX(resultSet.getString("bssid"));
+                    dataHolder.setY(resultSet.getDouble("avg"));
+                    list.add(dataHolder);
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    public int count(){
+
+        int count = 0;
+
+        try(Statement statement = connection.createStatement()) {
+
+            try (ResultSet resultSet = statement.executeQuery("SELECT COUNT(DISTINCT bssid) AS total FROM "+table)) {
+
+                while (resultSet.next()) {
+                    count = resultSet.getInt("total");
+                }
+            }
+        }catch (Exception e){
+
+        }
+
+        return count;
     }
 }

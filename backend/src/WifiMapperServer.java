@@ -45,10 +45,10 @@ public class WifiMapperServer {
             HttpContext resource = server.createContext("/resources");
             resource.setHandler(WifiMapperRouter::resourceRequest);
 
-            HttpContext admin = server.createContext("/admin");
+            HttpContext admin = server.createContext("/dashboard");
             admin.setHandler(WifiMapperRouter::adminRequest);
 
-            HttpContext graph = server.createContext("/admin/graph");
+            HttpContext graph = server.createContext("/stats");
             graph.setHandler(WifiMapperRouter::graphRequest);
 
             server.start();

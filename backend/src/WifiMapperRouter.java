@@ -202,12 +202,15 @@ public class WifiMapperRouter {
                 String map = address + "/map";
                 String login = address + "/login";
 
+                SignalStrengthDao signalStrengthDao = new SignalStrengthDao();
+
                 HashMap<String, Object> scopes = new HashMap<>();
                 scopes.put("jquery", jquery);
                 scopes.put("bootstrapJs", bootstrapJs);
                 scopes.put("wifimapperCss", wifimapperCss);
                 scopes.put("bootstrapCss", bootstrapCss);
                 scopes.put("wifiMapperJs", wifiMapperJs);
+                scopes.put("apnCount", signalStrengthDao.count());
 
                 StringWriter writer = new StringWriter();
                 MustacheFactory mf = new DefaultMustacheFactory();
@@ -273,18 +276,6 @@ public class WifiMapperRouter {
     example of request: /admin/graphs?timestamp=X
 
     * Format of Json data returned:
-    * {
-  "cols": [
-        {"id":"","label":"Topping","pattern":"","type":"string"},
-        {"id":"","label":"Slices","pattern":"","type":"number"}
-      ],
-  "rows": [
-        {"c":[{"v":"Mushrooms","f":null},{"v":3,"f":null}]},
-        {"c":[{"v":"Onions","f":null},{"v":1,"f":null}]},
-        {"c":[{"v":"Olives","f":null},{"v":1,"f":null}]},
-        {"c":[{"v":"Zucchini","f":null},{"v":1,"f":null}]},
-        {"c":[{"v":"Pepperoni","f":null},{"v":2,"f":null}]}
-      ]
 }
 
     * */
@@ -293,14 +284,29 @@ public class WifiMapperRouter {
         log(exchange, "Request");
 
         String[] query = exchange.getRequestURI().getQuery().split("=");
+        SignalStrengthDao signalStrengthDao;
 
         switch (exchange.getRequestMethod()) {
             case "GET":
-                if("source".equals(query[0]) && "apn".equals(query[1])) {
-                    AccessPointDao accessPointDao = new AccessPointDao();
+                switch (query[0]){
+                    case "apncount":
+                        signalStrengthDao = new SignalStrengthDao();
+                        Map<String, Integer> response = new HashMap<>();
+                        response.put("count",signalStrengthDao.count());
+                        sendResponse(exchange, "application/json", 200, new Gson().toJson(response));
+                        break;
+                    case "avgstrength":
+                        signalStrengthDao = new SignalStrengthDao();
+                        System.out.println("HEEEE");
+                        sendResponse(exchange, "application/json", 200, new Gson().toJson(signalStrengthDao.getAvgSgtrenth()));
+                        break;
+                    case "monthly":
+                        break;
+                    case "linkspeed":
+                        break;
+                    case "location":
+                        break;
 
-                }else if("source".equals(query[0]) && "strength".equals(query[1])) {
-                    SignalStrengthDao signalStrengthDao = new SignalStrengthDao();
                 }
                 break;
             case "POST":

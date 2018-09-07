@@ -146,6 +146,25 @@ public class AccessPointDao implements Dao<AccessPoint> {
         }
     }
 
+    public int count(){
+
+        int count = 0;
+
+        try(Statement statement = connection.createStatement()) {
+
+            try (ResultSet resultSet = statement.executeQuery("SELECT COUNT(DISTINCT bssid) AS total FROM access_point;")) {
+
+                while (resultSet.next()) {
+                    count = resultSet.getInt("total");
+                }
+            }
+        }catch (Exception e){
+
+        }
+
+        return count;
+    }
+
     @Override
     public void update(AccessPoint t, String[] params) {
 
