@@ -7,10 +7,12 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
-import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -47,7 +49,7 @@ import retrofit2.Response;
 * 5. Display markers on map
 * */
 
-public class MapActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private GoogleMap map;
     private FusedLocationProviderClient fusedLocationProviderClient;
@@ -81,6 +83,10 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
 
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle(getResources().getString(R.string.app_name));
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -92,14 +98,15 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         attemptBroadcastWifiReading();
     }
 
+    /* Add options menu to toolbar*/
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add("Settings");
         MenuInflater infl = getMenuInflater();
         infl.inflate(R.menu.settings_main_menu, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
+    /* When option settings is clicked got to settings screen */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.Settings ){
@@ -131,6 +138,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         }
     }
 
+    /* Load map and add markers to map */
     @Override
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;

@@ -48,8 +48,8 @@ public class WifiMapperServer {
             HttpContext admin = server.createContext("/admin");
             admin.setHandler(WifiMapperRouter::adminRequest);
 
-            HttpContext map = server.createContext("/admin/map");
-            map.setHandler(WifiMapperRouter::mapRequest);
+            HttpContext graph = server.createContext("/admin/graph");
+            graph.setHandler(WifiMapperRouter::graphRequest);
 
             server.start();
 

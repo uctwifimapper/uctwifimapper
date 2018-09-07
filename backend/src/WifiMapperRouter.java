@@ -265,6 +265,52 @@ public class WifiMapperRouter {
         }
     }
 
+    /* Method returns data used on the dashboard, data used  google charts
+
+    example of request: /admin/graphs?source=apn
+    example of request: /admin/graphs?source=strength
+    example of request: /admin/graphs?timestamp=X
+    example of request: /admin/graphs?timestamp=X
+
+    * Format of Json data returned:
+    * {
+  "cols": [
+        {"id":"","label":"Topping","pattern":"","type":"string"},
+        {"id":"","label":"Slices","pattern":"","type":"number"}
+      ],
+  "rows": [
+        {"c":[{"v":"Mushrooms","f":null},{"v":3,"f":null}]},
+        {"c":[{"v":"Onions","f":null},{"v":1,"f":null}]},
+        {"c":[{"v":"Olives","f":null},{"v":1,"f":null}]},
+        {"c":[{"v":"Zucchini","f":null},{"v":1,"f":null}]},
+        {"c":[{"v":"Pepperoni","f":null},{"v":2,"f":null}]}
+      ]
+}
+
+    * */
+    public static void graphRequest(HttpExchange exchange){
+
+        log(exchange, "Request");
+
+        String[] query = exchange.getRequestURI().getQuery().split("=");
+
+        switch (exchange.getRequestMethod()) {
+            case "GET":
+                if("source".equals(query[0]) && "apn".equals(query[1])) {
+                    AccessPointDao accessPointDao = new AccessPointDao();
+
+                }else if("source".equals(query[0]) && "strength".equals(query[1])) {
+                    SignalStrengthDao signalStrengthDao = new SignalStrengthDao();
+                }
+                break;
+            case "POST":
+                break;
+            default:
+                break;
+        }
+
+    }
+
     public static void resourceRequest(HttpExchange exchange) {
 
         log(exchange, "Request");
@@ -313,7 +359,7 @@ public class WifiMapperRouter {
      * */
     private static void sendResponse(HttpExchange exchange, String contentType, int responseCode, String responseBody) {
 
-        log(exchange, "Response");
+        log(exchange, ""+responseCode);
 
         try {
             exchange.getResponseHeaders().set("Content-Type", contentType);

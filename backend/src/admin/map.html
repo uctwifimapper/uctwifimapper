@@ -2,9 +2,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>WifiMapper</title>
-    <script src="{{jquery}}"></script>
-    <script src="{{bootstrapJs}}"></script>
+    <title>WifiMapper - Map</title>
+    <script type="text/javascript" src="{{jquery}}"></script>
+    <script type="text/javascript" src="{{bootstrapJs}}"></script>
     <link rel="stylesheet" type="text/css" href="{{bootstrapCss}}">
     <link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
 </head>
@@ -14,15 +14,15 @@
         <a class="py-2" href="/">
             UCT WifiMApper
         </a>
-        <a class="py-2 d-none d-md-inline-block" href="/">Map</a>
-        <a class="py-2 d-none d-md-inline-block" href="login">Login</a>
+        <a class="py-2 d-none d-md-inline-block active" href="/">Map</a>
+        <a class="py-2 d-none d-md-inline-block" href="admin">Dashboard</a>
     </div>
 </nav>
 <div style="height: 760px;">
     <div id="map" style="height:100%;"></div>
 </div>
 </body>
-<script src="{{mapJs}}"></script>
+<script type="text/javascript" src="{{mapJs}}"></script>
 <script async defer
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDRKkeWHQjnh9cwsNQWBT3zov4t7YX4MuE&libraries=visualization&callback=initMap">
 </script>
