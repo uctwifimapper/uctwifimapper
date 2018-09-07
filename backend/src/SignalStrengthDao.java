@@ -81,8 +81,6 @@ public class SignalStrengthDao implements Dao<SignalStrength> {
             }
         }
 
-        System.out.println(query);
-
         try(Statement statement = connection.createStatement()) {
 
             try(ResultSet resultSet = statement.executeQuery(query)) {
@@ -105,7 +103,6 @@ public class SignalStrengthDao implements Dao<SignalStrength> {
             e.printStackTrace();
         }
 
-        System.out.println("DB Response: "+new Gson().toJson(signalStrengthList));
         return signalStrengthList;
     }
 
@@ -118,7 +115,6 @@ public class SignalStrengthDao implements Dao<SignalStrength> {
     @Override
     public boolean save(SignalStrength signalStrength) {
 
-        System.out.println("Save Signal Object: "+signalStrength);
         try {
             PGobject pGobject = new PGobject();
             pGobject.setValue(signalStrength.getBssid());

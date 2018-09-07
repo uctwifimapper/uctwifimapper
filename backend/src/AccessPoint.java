@@ -1,3 +1,4 @@
+import com.google.gson.annotations.SerializedName;
 import org.postgresql.geometric.PGpoint;
 
 /*
@@ -9,11 +10,17 @@ import org.postgresql.geometric.PGpoint;
 * */
 
 public class AccessPoint {
+    @SerializedName("name")
     private String name; //name of point e.g computer science level 1
+    @SerializedName("bssid")
     private String bssid; //Unique mac address of wireless router
+    @SerializedName("ssid")
     private String ssid; //Network identifier e.g eduroam
+    @SerializedName("location")
     private PGpoint location; //location of the router
+    @SerializedName("linkSpeed")
     private int linkSpeed;
+    @SerializedName("timestamp")
     private long timestamp; //unix timestamp
 
     public String getName() {

@@ -5,13 +5,12 @@ import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.io.*;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +36,7 @@ public class WifiMapperRouter {
 
     //For other queries not part of api, return generic response
     public static void rootRequest(HttpExchange exchange) {
+        log(exchange, "Request");
         try {
             String response = "Welcome to WifiMapper.";
             exchange.sendResponseHeaders(200, response.getBytes().length);
@@ -59,7 +59,7 @@ public class WifiMapperRouter {
      * */
     public static void apnRequest(HttpExchange exchange) {
 
-        System.out.println("Response sent: " + exchange.getRequestURI().toString() + " @ " + LocalDate.now());
+        log(exchange, "Request");
 
         AccessPointDao accessPointDao;
 
@@ -75,15 +75,9 @@ public class WifiMapperRouter {
 
                 if (2 == query.length) {
 
-                    Map<String, List> map = new HashMap<>();
-                    map.put("data", accessPointDao.get(query));
-
-                    System.out.println("Map: " + new Gson().toJson(map));
-
-                    jsonResponse = new Gson().toJson(map); //Forward to AccessPointDao for further processing
+                    jsonResponse = new Gson().toJson(accessPointDao.get(query)); //Forward to AccessPointDao for further processing
                 }
 
-                System.out.println(jsonResponse);
                 sendResponse(exchange, "application/json", 200, jsonResponse); //send response to client
 
                 break;
@@ -120,12 +114,14 @@ public class WifiMapperRouter {
                 break;
 
             default:
-                sendResponse(exchange, "application/json", 400, new Gson().toJson("{\"generic\":\"error\"}"));
+                sendResponse(exchange, "application/json", 404, new Gson().toJson("{\"generic\":\"error\"}"));
                 break;
         }
     }
 
     public static void strengthRequest(HttpExchange exchange) {
+
+        log(exchange, "Request");
 
         SignalStrengthDao signalStrengthDao;
 
@@ -133,14 +129,9 @@ public class WifiMapperRouter {
 
             case "GET":
                 String[] query = exchange.getRequestURI().getQuery().split("=", 0); //Process request payload
-
                 signalStrengthDao = new SignalStrengthDao();
-
                 String jsonResponse = "{\"generic\" : \"error\"}";
-
                 jsonResponse = new Gson().toJson(signalStrengthDao.get(query));
-
-                System.out.println(jsonResponse);
                 sendResponse(exchange, "application/json", 200, jsonResponse); //send response to client
                 break;
             case "POST":
@@ -163,8 +154,6 @@ public class WifiMapperRouter {
                     e.printStackTrace();
                 }
 
-                System.out.println("String Save: " + body);
-
                 signalStrengthDao = new SignalStrengthDao();
 
                 if (signalStrengthDao.save(new Gson().fromJson(body.toString(), SignalStrength.class))) {
@@ -181,6 +170,9 @@ public class WifiMapperRouter {
 
     /* Authenticate user and start session if correctly logged in */
     public static void loginRequest(HttpExchange exchange) {
+
+        log(exchange, "Request");
+
     }
 
     /*
@@ -194,85 +186,123 @@ public class WifiMapperRouter {
      * */
     public static void adminRequest(HttpExchange exchange) {
 
-        System.out.println("Response sent: " + exchange.getRequestURI().toString() + " @ " + LocalDate.now());
+        log(exchange, "Request");
 
-        String address = "http://" + exchange.getLocalAddress().getHostName() + ":" + exchange.getLocalAddress().getPort() + exchange.getRequestURI();
-        String jquery = address + "/resources/js/jquery-3.3.1.min.js";
-        String dataTableJs = "//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js";
-        String dataTableCss = "//cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css";
-        String wifiMapperJs = address + "/resources/js/wifimapper.js";
-        String wifimapperCss = address + "/resources/css/wifimapper.css";
-        String map = address + "/map";
-        String login = address + "/login";
+        switch (exchange.getRequestMethod()) {
 
-        HashMap<String, Object> scopes = new HashMap<String, Object>();
-        scopes.put("jquery", jquery);
-        scopes.put("wifimapperCss", wifimapperCss);
-        scopes.put("wifiMapperJs", wifiMapperJs);
+            case "GET":
 
-        StringWriter writer = new StringWriter();
-        MustacheFactory mf = new DefaultMustacheFactory();
-        Mustache mustache = mf.compile("admin/index.html");
-        mustache.execute(writer, scopes);
-        writer.flush();
-        String response = writer.toString();
+                String address = "http://" + exchange.getLocalAddress().getHostName() + ":" + exchange.getLocalAddress().getPort();// + exchange.getRequestURI();
 
-        sendResponse(exchange, "text/html", 200, response);
+                String jquery = address + "/resources/js/jquery-3.3.1.min.js";
+                String bootstrapJs = address + "/resources/js/bootstrap.min.js";
+                String wifiMapperJs = address + "/resources/js/wifimapper.js";
+                String wifimapperCss = address + "/resources/css/wifimapper.css";
+                String bootstrapCss = address + "/resources/css/bootstrap.min.css";
+                String map = address + "/map";
+                String login = address + "/login";
+
+                HashMap<String, Object> scopes = new HashMap<>();
+                scopes.put("jquery", jquery);
+                scopes.put("bootstrapJs", bootstrapJs);
+                scopes.put("wifimapperCss", wifimapperCss);
+                scopes.put("bootstrapCss", bootstrapCss);
+                scopes.put("wifiMapperJs", wifiMapperJs);
+
+                StringWriter writer = new StringWriter();
+                MustacheFactory mf = new DefaultMustacheFactory();
+                Mustache mustache = mf.compile("admin/index.html");
+                mustache.execute(writer, scopes);
+                writer.flush();
+                String response = writer.toString();
+                sendResponse(exchange, "text/html", 200, response);
+                break;
+            case "POST":
+                sendResponse(exchange, "text/html", 404, "");
+                break;
+            default:
+                sendResponse(exchange, "text/html", 404, "");
+                break;
+        }
     }
 
     public static void mapRequest(HttpExchange exchange) {
 
-        String line = "";
-        String response = "";
-        String rootFolder = Paths.get(".").toAbsolutePath().normalize().toString(); //..wifimapper/backend
+        log(exchange, "Request");
 
-        String address = exchange.getRequestURI().toString();
-        System.out.println("Received " + address + " @ " + LocalDate.now());
+        switch (exchange.getRequestMethod()) {
+            case "GET":
 
-        try {
-            File resourceFile = new File(rootFolder + "/src/admin/map.html");
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(resourceFile)));
+                String address = "http://" + exchange.getLocalAddress().getHostName() + ":" + exchange.getLocalAddress().getPort(); //+ exchange.getRequestURI();
 
-            while ((line = bufferedReader.readLine()) != null) {
-                response += line;
-            }
-            bufferedReader.close();
+                String jquery = address + "/resources/js/jquery-3.3.1.min.js";
+                String bootstrapJs = address + "/resources/js/bootstrap.min.js";
+                String mapJs = address + "/resources/js/map.js";
+                String wifimapperCss = address + "/resources/css/wifimapper.css";
+                String bootstrapCss = address + "/resources/css/bootstrap.min.css";
+                String map = address + "/map";
+                String login = address + "/login";
 
-            sendResponse(exchange, "", 200, response);
+                HashMap<String, Object> scopes = new HashMap<>();
+                scopes.put("jquery", jquery);
+                scopes.put("bootstrapJs", bootstrapJs);
+                scopes.put("wifimapperCss", wifimapperCss);
+                scopes.put("bootstrapCss", bootstrapCss);
+                scopes.put("mapJs", mapJs);
 
-        } catch (IOException e) {
-            sendResponse(exchange, "text/html", 400, "");
-            e.printStackTrace();
+                StringWriter writer = new StringWriter();
+                MustacheFactory mf = new DefaultMustacheFactory();
+                Mustache mustache = mf.compile("admin/map.html");
+                mustache.execute(writer, scopes);
+                writer.flush();
+                String response = writer.toString();
+                sendResponse(exchange, "text/html", 200, response);
+                break;
+            case "POST":
+            default:
+                sendResponse(exchange, "text/html", 404, "");
+                break;
         }
     }
 
     public static void resourceRequest(HttpExchange exchange) {
 
-        String line = "";
-        String response = "";
-        String rootFolder = Paths.get(".").toAbsolutePath().normalize().toString(); //..wifimapper/backend
+        log(exchange, "Request");
 
-        String address = exchange.getRequestURI().toString(); //"http://"+exchange.getLocalAddress().getHostName() +":"+ exchange.getLocalAddress().getPort()+exchange.getRequestURI();
-        System.out.println("Received " + address + " @ " + LocalDate.now());
+        switch (exchange.getRequestMethod()) {
+            case "GET":
 
-        try {
-            File resourceFile = new File(rootFolder + "/src" + exchange.getRequestURI());
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(resourceFile)));
+                String line = "";
+                String response = "";
+                String rootFolder = Paths.get(".").toAbsolutePath().normalize().toString(); //..wifimapper/backend
 
-            while ((line = bufferedReader.readLine()) != null) {
-                response += line;
-            }
-            bufferedReader.close();
+                String address = exchange.getRequestURI().toString();
 
-            if (exchange.getRequestURI().toString().contains("css")) {
-                sendResponse(exchange, "text/css", 200, response);
-            } else {
-                sendResponse(exchange, "application/javascript", 200, response);
-            }
+                try {
+                    File resourceFile = new File(rootFolder + "/src/admin/" + exchange.getRequestURI());
 
-        } catch (IOException e) {
-            sendResponse(exchange, "text/html", 400, "");
-            e.printStackTrace();
+                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(resourceFile)));
+
+                    while ((line = bufferedReader.readLine()) != null) {
+                        response += line;
+                    }
+                    bufferedReader.close();
+
+                    if (exchange.getRequestURI().toString().contains("css")) {
+                        sendResponse(exchange, "text/css", 200, response);
+                    } else {
+                        sendResponse(exchange, "application/javascript", 200, response);
+                    }
+
+                } catch (IOException e) {
+                    sendResponse(exchange, "text/html", 400, "");
+                    e.printStackTrace();
+                }
+                break;
+            case "POST":
+            default:
+                sendResponse(exchange, "text/html", 404, "");
+                break;
         }
     }
 
@@ -283,8 +313,9 @@ public class WifiMapperRouter {
      * */
     private static void sendResponse(HttpExchange exchange, String contentType, int responseCode, String responseBody) {
 
+        log(exchange, "Response");
+
         try {
-            System.out.println("Response sent: " + exchange.getRequestURI().toString() + " @ " + LocalDate.now());
             exchange.getResponseHeaders().set("Content-Type", contentType);
             exchange.sendResponseHeaders(responseCode, responseBody.getBytes().length);
             OutputStream response = exchange.getResponseBody();
@@ -293,5 +324,10 @@ public class WifiMapperRouter {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private static void log(HttpExchange exchange, String customMessage){
+        String time = (DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")).format(LocalDateTime.now());
+        System.out.printf("%-4s %-3s %-3s %s %s", time, customMessage, exchange.getRequestMethod(), exchange.getRequestURI().toString(), "\n");
     }
 }

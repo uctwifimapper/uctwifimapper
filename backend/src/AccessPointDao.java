@@ -107,8 +107,6 @@ public class AccessPointDao implements Dao<AccessPoint> {
             e.printStackTrace();
         }
 
-        System.out.println("DB Response: "+new Gson().toJson(apnList));
-
         return apnList;
     }
 
